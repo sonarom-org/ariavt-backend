@@ -1,6 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
 import psycopg2
-from config import database 
+from config import database
 
 
 def connect():
@@ -10,16 +11,16 @@ def connect():
 
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')
-    	
+
         conn = psycopg2.connect(
             host=database["host"],
             database=database["database"],
             user=database["user"],
-            password=database["password"])	
+            password=database["password"])
 
         # create a cursor
         cur = conn.cursor()
-        
+
         # execute a statement
         print('PostgreSQL database version:')
         cur.execute('SELECT version()')
@@ -27,7 +28,7 @@ def connect():
         # display the PostgreSQL database server version
         db_version = cur.fetchone()
         print(db_version)
-       
+
         # close the communication with the PostgreSQL
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
