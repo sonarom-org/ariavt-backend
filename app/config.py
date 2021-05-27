@@ -7,8 +7,9 @@ data = {
 }
 
 database = {
-    'host': '0.0.0.0',
+    'host': 'postgresdb',
     'database': 'data',
     'user': 'postgres',
     'password': 'postgres',
+    'port': 5432
 }

@@ -16,7 +16,8 @@ def connect():
             host=database["host"],
             database=database["database"],
             user=database["user"],
-            password=database["password"])
+            password=database["password"],
+            port=database["port"])
 
         # create a cursor
         cur = conn.cursor()

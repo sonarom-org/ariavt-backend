@@ -4,9 +4,15 @@ services:
   backend:
     build:
       context: .
-    # ports:
-      # - 8000:8000
+    ports:
+      - 8000:8000
     volumes:
       - ./app/:/app_wd
-    network_mode: "host"
+    # network_mode: "host"
+    networks:
+      - be_dev-net
 
+networks:
+  be_dev-net:
+    name: dev-net
+    driver: bridge
