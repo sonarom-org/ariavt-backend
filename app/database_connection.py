@@ -3,7 +3,7 @@
 import psycopg2
 from psycopg2.extensions import cursor
 
-from config import database as database_config
+from .config import database as database_config
 
 
 class PostgreSQLConnection:

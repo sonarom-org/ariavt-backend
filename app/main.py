@@ -2,9 +2,11 @@ from typing import List
 # from icecream import ic
 from fastapi import FastAPI, File, UploadFile
 import os
-from config import data
+from .config import data
 # Development:
 from fastapi.middleware.cors import CORSMiddleware
+
+from .query import Insert, SelectAll
 
 
 app = FastAPI()
@@ -24,12 +26,7 @@ app.add_middleware(
 )
 # >
 
-# TODO: check how to handle files list.
 # TODO: allow uploading multiple files at a time.
-
-# Received messages list
-app.messages = []
-app.files = {}
 
 
 @app.get("/ping")
@@ -44,24 +41,29 @@ async def upload_files_bytes(files: List[bytes] = File(...)):
 
 @app.get("/files/{filename}")
 async def get_file_by_name(filename: str):
-    print(app.files)
-    return app.files[filename]
+    raise NotImplemented
+    # print(app.files)
+    # return app.files[filename]
 
 
 @app.get("/files/")
 async def get_files():
-    print(app.files)
-    return [{"name": file, "url": "url"} for file in app.files]
+    results = SelectAll().run_query(table='images')
+    results = [r[0] for r in results]
+    print(results)
+    return [{"name": file, "url": "url"} for file in results]
 
 
 @app.post("/upload/")
 async def upload_file_bytes(file: UploadFile = File(...)):
-    app.files[file.filename] = {"file": file.file}
     path_to_save = os.path.join(data['folder'], file.filename)
     print('Writing file {} to disk...'.format(file.filename))
     with open(path_to_save, 'wb+') as f:
         f.write(file.file.read())
         f.close()
+    Insert().run_query(table='images',
+                       columns=['relative_path'],
+                       values=[file.filename])
     return {"filename": file.filename}
 
 
