@@ -8,14 +8,12 @@ class TestQuery(unittest.TestCase):
 
     def test_select_all(self):
         # Select all
-        query = SelectAll()
-        results = query.run_query(table='images')
+        results = SelectAll(table='images').run_query()
         print(results)
 
     def test_insert(self):
         # Insert
-        query = Insert()
-        results = query.run_query(table='images',
-                                  columns=['relative_path'],
-                                  values=['sample_img'])
+        results = Insert(table='images',
+                         columns=['relative_path'],
+                         values=['sample_img']).run_query()
         print(results)
