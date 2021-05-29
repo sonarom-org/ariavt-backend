@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
-import unittest
-from typing import Any
+from typing import Any, List
 
 from icecream import ic
 
 from psycopg2.extensions import cursor
 
-from database_connection import connection
+from .database_connection import connection
 
 
 class Query:
@@ -45,8 +44,8 @@ class SelectAll(Query):
 
 class Insert(Query):
 
-    def build_query(self, table: str, columns: list[str],
-                    values: list[str]) -> str:
+    def build_query(self, table: str, columns: List[str],
+                    values: List[str]) -> str:
 
         # Build columns string
         columns_str = ', '.join(map(str, columns))
@@ -64,19 +63,3 @@ class Insert(Query):
         # results = query_cursor.fetchall()
         return True
 
-
-class TestQuery(unittest.TestCase):
-
-    def test_select_all(self):
-        # Select all
-        query = SelectAll()
-        results = query.run_query(table='images')
-        print(results)
-
-    def test_insert(self):
-        # Insert
-        query = Insert()
-        results = query.run_query(table='images',
-                                  columns=['relative_path'],
-                                  values=['sample_img'])
-        print(results)
