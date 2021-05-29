@@ -1,7 +1,7 @@
 
 import unittest
 
-from app.query import SelectAll, Insert
+from app.query import SelectAll, Insert, Select
 
 
 class TestQuery(unittest.TestCase):
@@ -13,7 +13,13 @@ class TestQuery(unittest.TestCase):
 
     def test_insert(self):
         # Insert
-        results = Insert(table='images',
-                         columns=['relative_path'],
-                         values=['sample_img']).run_query()
+        result = Insert(table='images',
+                        columns=['relative_path'],
+                        values=['sample_img']).run_query()
+        print(result)
+
+    def test_select(self):
+        # Select
+        results = Select(columns=['relative_path'],
+                         table='images').run_query()
         print(results)

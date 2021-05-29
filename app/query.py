@@ -2,8 +2,6 @@
 
 from typing import Any, List
 
-from icecream import ic
-
 from psycopg2.extensions import cursor
 
 from .database_connection import connection
@@ -35,7 +33,7 @@ class SelectAll(Query):
         super().__init__()
         self.query = 'SELECT * FROM {}'.format(table)
 
-    def fetch_results(self, query_cursor: cursor):
+    def fetch_results(self, query_cursor: cursor) -> List:
         results = query_cursor.fetchall()
         return results
 
@@ -50,13 +48,27 @@ class Insert(Query):
         # Build values string
         values_str = str(values)[1:-1]
 
-        ic(columns_str, values_str)
-
         query_template = """INSERT INTO {} ({}) VALUES ({});"""
 
         self.query = query_template.format(table, columns_str, values_str)
 
-    def fetch_results(self, query_cursor: cursor):
+    def fetch_results(self, query_cursor: cursor) -> bool:
         connection.commit()
         return True
 
+
+class Select(Query):
+
+    def __init__(self, columns: List[str], table: str):
+        super().__init__()
+
+        # Build columns string
+        columns_str = ', '.join(map(str, columns))
+
+        query_template = """SELECT {} FROM {};"""
+
+        self.query = query_template.format(columns_str, table)
+
+    def fetch_results(self, query_cursor: cursor) -> List:
+        results = query_cursor.fetchall()
+        return results
