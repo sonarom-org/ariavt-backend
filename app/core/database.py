@@ -7,7 +7,7 @@ from pydantic import BaseModel
 # SQLAlchemy specific code
 
 # "postgresql://user:password@postgresserver/database"
-DATABASE_URL = "postgresql://postgres:postgres@localhost/data"
+DATABASE_URL = "postgresql://postgres:postgres@localhost/ariavtool"
 
 database = databases.Database(DATABASE_URL)
 
