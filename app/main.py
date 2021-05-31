@@ -2,12 +2,11 @@ from typing import List
 # from icecream import ic
 from fastapi import FastAPI, File, UploadFile
 import os
-from .config import data
+from core.config import data
 # Development:
 from fastapi.middleware.cors import CORSMiddleware
 
-from .query import Insert, SelectAll
-
+from core.database import database, ImageIn, Image, images
 
 app = FastAPI()
 
@@ -29,6 +28,30 @@ app.add_middleware(
 # TODO: allow uploading multiple files at a time.
 
 
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+
+
+@app.get("/images/", response_model=List[Image])
+async def read_images():
+    query = images.select()
+    return await database.fetch_all(query)
+
+
+@app.post("/images/", response_model=Image)
+async def create_image(image: ImageIn):
+    query = images.insert().values(text=image.text,
+                                   relative_path=image.relative_path)
+    last_record_id = await database.execute(query)
+    return {**image.dict(), "id": last_record_id}
+
+
 @app.get("/ping")
 async def ping():
     return {"ping": "OK"}
@@ -46,25 +69,18 @@ async def get_file_by_name(filename: str):
     # return app.files[filename]
 
 
-@app.get("/files/")
-async def get_files():
-    results = SelectAll().run_query(table='images')
-    results = [r[0] for r in results]
-    print(results)
-    return [{"name": file, "url": "url"} for file in results]
-
-
 @app.post("/upload/")
 async def upload_file_bytes(file: UploadFile = File(...)):
     path_to_save = os.path.join(data['folder'], file.filename)
     print('Writing file {} to disk...'.format(file.filename))
+    contents = await file.read()
     with open(path_to_save, 'wb+') as f:
-        f.write(file.file.read())
+        f.write(contents)
         f.close()
-    Insert().run_query(table='images',
-                       columns=['relative_path'],
-                       values=[file.filename])
-    return {"filename": file.filename}
+    query = images.insert().values(text="Image",
+                                   relative_path=path_to_save)
+    last_record_id = await database.execute(query)
+    return {"id": last_record_id}
 
 
 @app.post("/uploadfiles/")

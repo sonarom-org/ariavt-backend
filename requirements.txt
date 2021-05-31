@@ -1,4 +1,8 @@
 fastapi
+pydantic
 python-multipart
 uvicorn
-psycopg2
+# Database
+databases
+sqlalchemy
+asyncpg
