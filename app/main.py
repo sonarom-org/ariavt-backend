@@ -29,8 +29,12 @@ app.add_middleware(
 
 
 app.include_router(security.router)
-app.include_router(users.router, dependencies=[Depends(get_current_active_user)])
-app.include_router(images.router, dependencies=[Depends(get_current_active_user)])
+app.include_router(users.router,
+                   prefix='/users',
+                   dependencies=[Depends(get_current_active_user)])
+app.include_router(images.router,
+                   prefix='/images',
+                   dependencies=[Depends(get_current_active_user)])
 
 
 @app.on_event("startup")
