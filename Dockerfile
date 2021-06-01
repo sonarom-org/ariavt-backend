@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Alpine: small distro
-FROM python:3.8-alpine
+FROM python:3.9-slim-buster
 
 WORKDIR /app_wd/
 
@@ -9,13 +9,17 @@ WORKDIR /app_wd/
 COPY requirements.txt requirements.txt
 # Install requirements
 # apk... : necessary for psycopg2
-RUN apk update && \
-    apk add postgresql-dev gcc python3-dev musl-dev && \
+# Create folder in which the app-data volume will be mounted
+RUN apt-get update && \
+    apt-get -y install libpq-dev gcc && \
     pip3 install -r requirements.txt
 
-# Copy app/ into .
-COPY ./app/ .
+RUN mkdir /mnt/app-data
+
+# Copy
+# TODO: se puede mirar de no copiar todo, sino solo lo necesario
+COPY . .
 
 # Run server
-CMD [ "uvicorn", "main:app" , "--reload", "--host", "0.0.0.0", "--reload-dir", "."]
+CMD [ "uvicorn", "app.main:app" , "--reload", "--host", "0.0.0.0", "--reload-dir", "."]
 

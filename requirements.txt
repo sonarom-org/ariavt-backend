@@ -1,3 +1,4 @@
+# FastAPI - basic
 fastapi
 pydantic
 python-multipart
@@ -6,3 +7,9 @@ uvicorn
 databases
 sqlalchemy
 asyncpg
+psycopg2
+# Authentication
+python-jose[cryptography]
+passlib[bcrypt]
+# Files
+aiofiles
