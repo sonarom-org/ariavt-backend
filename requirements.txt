@@ -1,6 +1,7 @@
 # FastAPI - basic
 fastapi
 pydantic
+requests
 python-multipart
 uvicorn
 # Database
@@ -13,3 +14,5 @@ python-jose[cryptography]
 passlib[bcrypt]
 # Files
 aiofiles
+# Test
+pytest

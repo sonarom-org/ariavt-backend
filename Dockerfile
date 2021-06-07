@@ -20,6 +20,3 @@ RUN mkdir /mnt/app-data
 # TODO: se puede mirar de no copiar todo, sino solo lo necesario
 COPY . .
 
-# Run server
-CMD [ "uvicorn", "app.main:app" , "--reload", "--host", "0.0.0.0", "--reload-dir", "."]
-

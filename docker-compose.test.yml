@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  backend:
-    container_name: c_fastapi_backend
+  backend_test:
+    container_name: c_fastapi_backend_test
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,12 +10,11 @@ services:
       - 8000:8000
     volumes:
       - ./:/app_wd
-      - app-data:/mnt/app-data
+      - app-data-test:/mnt/app-data
     # network_mode: "host"
     networks:
       - be_dev-net
-    command: [ "uvicorn", "app.main:app" , "--reload", "--host",
-               "0.0.0.0", "--reload-dir", "."]
+    command: ["python3", "-m", "pytest"]
 
 networks:
   be_dev-net:
@@ -23,5 +22,5 @@ networks:
       name: dev-net
 
 volumes:
-  app-data:
+  app-data-test:
     external: true

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+if [ "test" == "$1" ]; then
+    DATABASE_URL="postgresql://postgres:postgres@c_postgresdb_test:5433/ariavtool"
+elif [ "dev" == "$1" ]; then
+    DATABASE_URL="postgresql://postgres:postgres@c_postgresdb:5432/ariavtool"
+elif [ "local" == "$1" ]; then
+    DATABASE_URL="postgresql://postgres:postgres@localhost:5433/ariavtool"
+else
+    echo "Error: unknown database."
+fi
+
+echo "$DATABASE_URL" > _database.txt
+
+docker-compose -f docker-compose."$1".yml up --build --force-recreate
+
