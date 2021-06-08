@@ -12,7 +12,7 @@ from app.data.operations import add_image
 router = APIRouter()
 
 
-@router.get("/images/", response_model=List[Image])
+@router.get("/", response_model=List[Image])
 async def read_images():
     query = images.select()
     return await database.fetch_all(query)
@@ -49,4 +49,3 @@ async def upload_images(files: List[UploadFile] = File(...)):
         last_record_id = await add_image(file)
         ids.append(last_record_id)
     return {"ids": ids}
-
