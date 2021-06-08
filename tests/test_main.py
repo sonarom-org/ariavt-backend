@@ -1,45 +1,10 @@
-from typing import Any
 from asgi_lifespan import LifespanManager
 import pytest
 from httpx import AsyncClient
-from pydantic import BaseModel
+
+from tests.utils import AccessToken
 
 from app.main import app
-
-
-class TokenResponse(BaseModel):
-    response: Any
-    tokens: dict
-    at: str
-    headers: dict
-
-
-class AccessToken:
-
-    at = None
-
-    @staticmethod
-    async def get_token(client):
-        if AccessToken.at is not None:
-            return AccessToken.at
-        else:
-            login_data = {
-                "username": "admin",
-                "password": "admin",
-            }
-
-            response = await client.post("/token", data=login_data)
-            response = response
-            tokens = response.json()
-            headers = {
-                'Authorization': 'Bearer ' + tokens["access_token"],
-                'accept': 'application/json',
-            }
-            tr = TokenResponse(response=response,
-                               tokens=tokens,
-                               at=tokens["access_token"],
-                               headers=headers)
-            return tr
 
 
 @pytest.fixture
