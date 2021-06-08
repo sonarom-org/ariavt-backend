@@ -2,10 +2,10 @@ version: '3.8'
 
 services:
   backend_test:
-    container_name: c_fastapi_backend_test
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: c_fastapi_backend_test
     ports:
       - 8000:8000
     volumes:
@@ -14,7 +14,7 @@ services:
     # network_mode: "host"
     networks:
       - be_dev-net
-    command: ["python3", "-m", "pytest"]
+    command: ["python3", "-m", "pytest", "-s"]
 
 networks:
   be_dev-net:
