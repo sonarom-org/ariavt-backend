@@ -11,7 +11,6 @@ services:
     volumes:
       - ./:/app_wd
       - app-data:/mnt/app-data
-    # network_mode: "host"
     networks:
       - be_dev-net
     command: [ "uvicorn", "app.main:app" , "--reload", "--host",

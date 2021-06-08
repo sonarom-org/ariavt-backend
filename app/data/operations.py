@@ -7,7 +7,7 @@ from fastapi import File, UploadFile, HTTPException
 from app.config import IMAGES_FOLDER
 from app.data.models import UserInDB
 from app.data.database import database, images, users
-from app.data.io_files import save_file
+from app.data.io_files import save_file, delete_file
 
 
 async def get_user(username: str):
@@ -34,3 +34,10 @@ async def add_image(file: UploadFile = File(...)):
                                    relative_path=relative_path)
     last_record_id = await database.execute(query)
     return last_record_id
+
+
+async def remove_image(file_name: str) -> None:
+    relative_path = os.path.join(IMAGES_FOLDER, file_name)
+    await delete_file(relative_path)
+    query = images.delete().where(images.columns.relative_path == relative_path)
+    await database.execute(query)

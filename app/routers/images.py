@@ -1,34 +1,24 @@
 
 from typing import List
+import hashlib
 
 from fastapi import APIRouter, File, UploadFile
 
-from app.data.models import ImageIn, Image
+from app.data.models import Image
 from app.data.database import database, images
 from app.data.io_files import get_file
-from app.data.operations import add_image
+from app.data.operations import add_image, remove_image
 
 
 router = APIRouter()
+
+selection = {}
 
 
 @router.get("/", response_model=List[Image])
 async def read_images():
     query = images.select()
     return await database.fetch_all(query)
-
-
-@router.post("/images/", response_model=Image)
-async def create_image(image: ImageIn):
-    query = images.insert().values(text=image.text,
-                                   relative_path=image.relative_path)
-    last_record_id = await database.execute(query)
-    return {**image.dict(), "id": last_record_id}
-
-
-@router.post("/files/")
-async def upload_files_bytes(files: List[bytes] = File(...)):
-    return {"file_sizes": [len(file) for file in files]}
 
 
 @router.get("/{filename}")
@@ -42,10 +32,24 @@ async def upload_image(file: UploadFile = File(...)):
     return {"id": last_record_id}
 
 
-@router.post("/upload-images")
+@router.post("/upload")
 async def upload_images(files: List[UploadFile] = File(...)):
     ids = []
     for file in files:
         last_record_id = await add_image(file)
         ids.append(last_record_id)
     return {"ids": ids}
+
+
+@router.post("/selection", status_code=201)
+async def select_images(file_names: List[str]):
+    selection_hash = hashlib.sha256(str(file_names).encode("utf-8")).hexdigest()[:8]
+    selection[selection_hash] = file_names
+    return {'selection': selection_hash}
+
+
+@router.delete("/selection/{selection_hash}", status_code=200)
+async def select_images(selection_hash: str):
+    for file_name in selection[selection_hash]:
+        await remove_image(file_name)
+    return {'removed': selection[selection_hash]}
