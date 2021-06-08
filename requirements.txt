@@ -16,3 +16,6 @@ passlib[bcrypt]
 aiofiles
 # Test
 pytest
+pytest-asyncio
+httpx
+asgi-lifespan
