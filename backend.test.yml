@@ -16,7 +16,3 @@ networks:
   be_dev-net:
     external:
       name: dev-net
-
-volumes:
-  app-data-test:
-    external: true
