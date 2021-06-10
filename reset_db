@@ -1,0 +1,8 @@
+#!/bin/bash
+
+docker stop c_postgresdb c_postgresdb_test
+docker rm c_postgresdb c_postgresdb_test
+docker volume rm postgres-data app-data app-data-test
+# $2 and $3: --build --force-recreate
+docker-compose -f docker-compose."$1".yml up "$2" "$3"
+

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgresdb:
+    container_name: c_postgresdb
+    build:
+      context: .
+      dockerfile: db.dockerfile
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - app-data:/mnt/app-data
+    environment:
+      - POSTGRES_DB=ariavtool
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres 
+    ports:
+      - "5432:5432"
+    command: -p 5432
+    networks:
+      - db_dev-net
+
+  postgresdb_test:
+    container_name: c_postgresdb_test
+    build:
+      context: .
+    restart: always
+    volumes:
+      - app-data-test:/mnt/app-data
+    environment:
+      - POSTGRES_DB=ariavtool
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres 
+    ports:
+      - "5433:5433"
+    command: -p 5433
+    networks:
+      - db_dev-net
+
+
+networks:
+  db_dev-net:
+    name: dev-net
+    driver: bridge
+
+volumes:
+  postgres-data:
+    name: postgres-data
+  app-data:
+    name: app-data
+  app-data-test:
+    name: app-data-test
