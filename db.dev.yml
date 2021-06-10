@@ -11,7 +11,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - app-data:/mnt/app-data
     environment:
-      - POSTGRES_DB=ariavtool
+      - POSTGRES_DB=ariavt
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres 
     ports:
@@ -29,7 +29,7 @@ services:
     volumes:
       - app-data-test:/mnt/app-data
     environment:
-      - POSTGRES_DB=ariavtool
+      - POSTGRES_DB=ariavt
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres 
     ports:
