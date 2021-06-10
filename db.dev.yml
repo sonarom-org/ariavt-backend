@@ -24,6 +24,7 @@ services:
     container_name: c_postgresdb_test
     build:
       context: .
+      dockerfile: db.dockerfile
     restart: always
     volumes:
       - app-data-test:/mnt/app-data
