@@ -4,7 +4,7 @@ services:
   backend_test:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend.dockerfile
     container_name: c_fastapi_backend_test
     ports:
       - 8000:8000
