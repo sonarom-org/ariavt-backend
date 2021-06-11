@@ -71,7 +71,7 @@ async def create_admin():
 
         query = users.insert().values(username='admin',
                                       full_name='admin',
-                                      email='admin@ariavtool.org',
+                                      email='admin@ariavt.org',
                                       disabled=False,
                                       hashed_password=hashed_password)
         _ = await database.execute(query)
