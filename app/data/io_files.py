@@ -39,7 +39,7 @@ async def save_file(relative_path: str, contents: bytes) -> None:
 
 
 async def get_file(filename: str) -> FileResponse:
-    path = os.path.join(DATA_FOLDER, IMAGES_FOLDER, filename)
+    path = os.path.join(DATA_FOLDER, filename)
     exists = await file_exists(path)
     if exists:
         return FileResponse(path)

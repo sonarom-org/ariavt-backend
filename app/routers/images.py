@@ -2,7 +2,7 @@
 from typing import List
 import hashlib
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, HTTPException
 
 from app.data.models import Image
 from app.data.database import database, images
@@ -21,9 +21,15 @@ async def read_images():
     return await database.fetch_all(query)
 
 
-@router.get("/{filename}")
-async def get_image_by_name(filename: str):
-    return await get_file(filename)
+@router.get("/{id_}")
+async def get_image(id_: int):
+    query = images.select().where(images.columns.id == id_)
+    db_image = await database.fetch_one(query)
+    if db_image is not None:
+        print(db_image['relative_path'])
+        return await get_file(db_image['relative_path'])
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
 
 
 @router.post("/")

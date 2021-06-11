@@ -126,9 +126,12 @@ async def test_upload_and_get_image(client: AsyncClient, token_r: TokenResponse)
     response = await upload_single_image(client, token_r, image_name)
     print(response)
     assert response.status_code == sc.OK
+    assert response.json()['id']
+    id_ = response.json()['id']
     # Get uploaded image
-    response = await client.get("/images/{}".format(image_name), headers=token_r.headers)
+    response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
+    # TODO: ...
     assert response.status_code == sc.OK
     assert type(response.content) == bytes
     # Remove the file
@@ -136,7 +139,7 @@ async def test_upload_and_get_image(client: AsyncClient, token_r: TokenResponse)
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
     # Try fetching the removed file
-    response = await client.get("/images/{}".format(image_name), headers=token_r.headers)
+    response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
     assert response.status_code == sc.NOT_FOUND
 
