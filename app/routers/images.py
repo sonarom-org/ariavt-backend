@@ -1,8 +1,8 @@
 
-from typing import List
+from typing import List, Optional
 import hashlib
 
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Query
 from sqlalchemy.sql import select
 
 from app.data.models import Image
@@ -17,9 +17,15 @@ selection = {}
 
 
 @router.get("/", response_model=List[Image])
-async def read_images():
-    query = images.select()
-    return await database.fetch_all(query)
+async def read_images(ids: Optional[List[int]] = Query(None)):
+    if ids is not None:
+        query = select([images], images.c.id.in_(ids))
+        db_images = await database.fetch_all(query)
+        if not db_images:
+            raise HTTPException(status_code=404, detail="Item(s) not found")
+    else:
+        query = images.select()
+        return await database.fetch_all(query)
 
 
 @router.get("/{id_}")
@@ -27,7 +33,6 @@ async def get_image(id_: int):
     query = images.select().where(images.columns.id == id_)
     db_image = await database.fetch_one(query)
     if db_image is not None:
-        print(db_image['relative_path'])
         return await get_file(db_image['relative_path'])
     else:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -56,7 +61,7 @@ async def select_images(ids: List[int]):
 
 
 @router.delete("/selection/{selection_hash}", status_code=200)
-async def select_images(selection_hash: str):
+async def delete_images(selection_hash: str):
     # Get DB records for given ids
     query = select([images], images.c.id.in_(selection[selection_hash]))
     db_images = await database.fetch_all(query)

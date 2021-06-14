@@ -87,6 +87,31 @@ async def upload_single_image(
     return response
 
 
+async def upload_images(
+        client: AsyncClient,
+        token_r: TokenResponse,
+        image_names: List[str]
+        ) -> Response:
+    # >>> files = [('images', ('foo.png', open('foo.png', 'rb'), 'image/png')),
+    #               ('images', ('bar.png', open('bar.png', 'rb'), 'image/png'))]
+    # >>> r = httpx.post("https://httpbin.org/post", files=files)
+    files = []
+    for image_name in image_names:
+        # Get the complete path of the image to be uploaded
+        file_to_upload = Path('/app_wd/tests/_imgs', image_name)
+        # Open file and build json to post
+        files.append(('files', file_to_upload.open('rb')))
+    # Add necessary 'multipart/form-data' header
+    headers = token_r.headers.copy()
+    headers['Content-Type'] = 'multipart/form-data'
+    print('HEADERS', headers)
+    # Post data
+    response = await client.post('/images/batch-upload',
+                                 files=files,
+                                 headers=token_r.headers)
+    return response
+
+
 async def delete_images(
         client: AsyncClient,
         token_r: TokenResponse,
@@ -141,4 +166,31 @@ async def test_upload_and_get_image(client: AsyncClient, token_r: TokenResponse)
     # Try fetching the removed file
     response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
+    assert response.status_code == sc.NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_upload_and_get_images(client: AsyncClient, token_r: TokenResponse):
+    image_names = ['c_im0236.png', 'c_im0237.png', 'c_im0238.png']
+    # Upload image
+    response = await upload_images(client, token_r, image_names)
+    print(response)
+    assert response.status_code == sc.OK
+    assert response.json()['ids']
+    ids = response.json()['ids']
+    # Get uploaded image
+    params = {'ids': ids}
+    response = await client.get("/images/", params=params, headers=token_r.headers)
+    print(response)
+    assert response.status_code == sc.OK
+    assert type(response.content) == bytes
+    # Remove the file
+    response = await delete_images(client, token_r, ids=ids)
+    assert response.status_code == sc.OK
+    assert 'removed' in response.json()
+    print(response.json())
+    # Try fetching the removed file
+    print('PARAMS', params)
+    response = await client.get("/images/", params=params, headers=token_r.headers)
+    print(response.json())
     assert response.status_code == sc.NOT_FOUND
