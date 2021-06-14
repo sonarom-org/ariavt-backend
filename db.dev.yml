@@ -26,8 +26,6 @@ services:
       context: .
       dockerfile: db.dockerfile
     restart: always
-    volumes:
-      - app-data-test:/mnt/app-data
     environment:
       - POSTGRES_DB=ariavt
       - POSTGRES_USER=postgres
@@ -49,5 +47,3 @@ volumes:
     name: postgres-data
   app-data:
     name: app-data
-  app-data-test:
-    name: app-data-test
