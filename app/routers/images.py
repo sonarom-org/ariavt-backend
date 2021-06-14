@@ -3,12 +3,14 @@ from typing import List, Optional
 import hashlib
 
 from fastapi import APIRouter, File, UploadFile, HTTPException, Query
+from fastapi import Depends
 from sqlalchemy.sql import select
 
-from app.data.models import Image
+from app.data.models import Image, UserInDB
 from app.data.database import database, images
 from app.data.io_files import get_file
 from app.data.operations import add_image, remove_image
+from app.security.methods import get_current_active_user
 
 
 router = APIRouter()
@@ -39,16 +41,22 @@ async def get_image(id_: int):
 
 
 @router.post("/")
-async def upload_image(file: UploadFile = File(...)):
-    last_record_id = await add_image(file)
+async def upload_image(
+        file: UploadFile = File(...),
+        current_user: UserInDB = Depends(get_current_active_user)
+        ):
+    last_record_id = await add_image(file, current_user)
     return {"id": last_record_id}
 
 
 @router.post("/batch-upload")
-async def upload_images(files: List[UploadFile] = File(...)):
+async def upload_images(
+        files: List[UploadFile] = File(...),
+        current_user: UserInDB = Depends(get_current_active_user)
+        ):
     ids = []
     for file in files:
-        last_record_id = await add_image(file)
+        last_record_id = await add_image(file, current_user)
         ids.append(last_record_id)
     return {"ids": ids}
 

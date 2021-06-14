@@ -4,12 +4,13 @@ from pydantic import BaseModel
 
 
 class ImageIn(BaseModel):
-    text: str
+    text: Optional[str]
     relative_path: str
 
 
 class Image(ImageIn):
     id: int
+    user_id: int
 
 
 class User(BaseModel):

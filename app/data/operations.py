@@ -10,7 +10,7 @@ from app.data.database import database, images, users
 from app.data.io_files import save_file, delete_file
 
 
-async def get_user(username: str):
+async def get_user(username: str) -> UserInDB:
     query = users.select().where(users.columns.username == username)
     user_dict = await database.fetch_one(query)
     # print(user_dict)
@@ -21,7 +21,7 @@ async def get_user(username: str):
     return user
 
 
-async def add_image(file: UploadFile = File(...)):
+async def add_image(file: UploadFile = File(...), user: UserInDB = None):
     relative_path = os.path.join(IMAGES_FOLDER, file.filename)
     print('Writing file {} to disk...'.format(file.filename))
     contents = await file.read()
@@ -31,7 +31,8 @@ async def add_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail="Uploaded file is not an image")
     await save_file(relative_path, contents)
     query = images.insert().values(text="Image",
-                                   relative_path=relative_path)
+                                   relative_path=relative_path,
+                                   user_id=user.id)
     last_record_id = await database.execute(query)
     return last_record_id
 
