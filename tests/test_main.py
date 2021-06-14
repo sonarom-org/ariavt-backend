@@ -90,13 +90,13 @@ async def upload_single_image(
 async def delete_images(
         client: AsyncClient,
         token_r: TokenResponse,
-        images_names: List[str]
+        ids: List[int]
         ) -> Response:
     headers = token_r.headers.copy()
     headers['Content-Type'] = 'application/json'
     print('HEADERS', headers)
     # Select images to delete
-    response = await client.post('/images/selection', json=images_names,
+    response = await client.post('/images/selection', json=ids,
                                  headers=token_r.headers)
     selection = response.json()['selection']
     # Delete selected images
@@ -113,8 +113,9 @@ async def test_upload_image(client: AsyncClient, token_r: TokenResponse):
     response = await upload_single_image(client, token_r, image_name)
     print(response)
     assert response.status_code == sc.OK
+    id_ = response.json()['id']
     # Remove uploaded image
-    response = await delete_images(client, token_r, images_names=[image_name])
+    response = await delete_images(client, token_r, ids=[id_])
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
 
@@ -131,15 +132,13 @@ async def test_upload_and_get_image(client: AsyncClient, token_r: TokenResponse)
     # Get uploaded image
     response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
-    # TODO: ...
     assert response.status_code == sc.OK
     assert type(response.content) == bytes
     # Remove the file
-    response = await delete_images(client, token_r, images_names=[image_name])
+    response = await delete_images(client, token_r, ids=[id_])
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
     # Try fetching the removed file
     response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
     assert response.status_code == sc.NOT_FOUND
-

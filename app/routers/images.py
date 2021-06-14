@@ -3,6 +3,7 @@ from typing import List
 import hashlib
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
+from sqlalchemy.sql import select
 
 from app.data.models import Image
 from app.data.database import database, images
@@ -38,7 +39,7 @@ async def upload_image(file: UploadFile = File(...)):
     return {"id": last_record_id}
 
 
-@router.post("/upload")
+@router.post("/batch-upload")
 async def upload_images(files: List[UploadFile] = File(...)):
     ids = []
     for file in files:
@@ -48,14 +49,18 @@ async def upload_images(files: List[UploadFile] = File(...)):
 
 
 @router.post("/selection", status_code=201)
-async def select_images(file_names: List[str]):
-    selection_hash = hashlib.sha256(str(file_names).encode("utf-8")).hexdigest()[:8]
-    selection[selection_hash] = file_names
+async def select_images(ids: List[int]):
+    selection_hash = hashlib.sha256(str(ids).encode("utf-8")).hexdigest()[:8]
+    selection[selection_hash] = ids
     return {'selection': selection_hash}
 
 
 @router.delete("/selection/{selection_hash}", status_code=200)
 async def select_images(selection_hash: str):
-    for file_name in selection[selection_hash]:
-        await remove_image(file_name)
+    # Get DB records for given ids
+    query = select([images], images.c.id.in_(selection[selection_hash]))
+    db_images = await database.fetch_all(query)
+    # Remove all selected images
+    for db_image in db_images:
+        await remove_image(db_image['id'], db_image['relative_path'])
     return {'removed': selection[selection_hash]}

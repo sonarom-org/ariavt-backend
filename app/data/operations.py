@@ -36,8 +36,9 @@ async def add_image(file: UploadFile = File(...)):
     return last_record_id
 
 
-async def remove_image(file_name: str) -> None:
-    relative_path = os.path.join(IMAGES_FOLDER, file_name)
+async def remove_image(id_: int, relative_path: str) -> None:
+    # Delete image file from file system
     await delete_file(relative_path)
-    query = images.delete().where(images.columns.relative_path == relative_path)
+    # Delete image record from images table
+    query = images.delete().where(images.columns.id == id_)
     await database.execute(query)
