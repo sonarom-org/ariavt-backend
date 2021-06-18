@@ -1,0 +1,9 @@
+_*
+!__init__.py
+.*
+!.gitignore
+!.dockerignore
+docs/
+*config*.py
+venv/
+app/database
