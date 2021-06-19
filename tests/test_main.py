@@ -40,6 +40,22 @@ async def test_get_access_token(token_r: TokenResponse):
 
 
 @pytest.mark.asyncio
+async def test_verify_token(
+        client: AsyncClient,
+        token_r: TokenResponse):
+    # OK
+    response = await client.get("/verify-token", headers=token_r.headers)
+    print(response.json())
+    assert response.status_code == sc.OK
+    # UNAUTHORIZED
+    headers = token_r.headers.copy()
+    headers['Authorization'] = 'Bearer ' + 'bad-token'
+    response = await client.get("/verify-token", headers=headers)
+    print(response.json())
+    assert response.status_code == sc.UNAUTHORIZED
+
+
+@pytest.mark.asyncio
 async def test_get_images_authenticated(
         client: AsyncClient,
         token_r: TokenResponse):
