@@ -8,7 +8,7 @@ from sqlalchemy.sql import select
 
 from app.data.models import Image, UserInDB
 from app.data.database import database, images
-from app.data.io_files import get_file
+from app.data.io_files import get_file, get_file_base64
 from app.data.operations import add_image, remove_image
 from app.security.methods import get_current_active_user
 
@@ -36,6 +36,16 @@ async def get_image(id_: int):
     db_image = await database.fetch_one(query)
     if db_image is not None:
         return await get_file(db_image['relative_path'])
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+
+@router.get("/base64/{id_}")
+async def get_image(id_: int):
+    query = images.select().where(images.columns.id == id_)
+    db_image = await database.fetch_one(query)
+    if db_image is not None:
+        return await get_file_base64(db_image['relative_path'])
     else:
         raise HTTPException(status_code=404, detail="Item not found")
 

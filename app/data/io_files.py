@@ -1,4 +1,4 @@
-
+import base64
 import os
 import stat
 
@@ -43,6 +43,17 @@ async def get_file(filename: str) -> FileResponse:
     exists = await file_exists(path)
     if exists:
         return FileResponse(path)
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+
+async def get_file_base64(filename: str):
+    path = os.path.join(DATA_FOLDER, filename)
+    exists = await file_exists(path)
+    if exists:
+        with open(path, "rb") as image_file:
+            encoded_image_string = base64.b64encode(image_file.read())
+        return encoded_image_string
     else:
         raise HTTPException(status_code=404, detail="Item not found")
 
