@@ -175,6 +175,11 @@ async def test_upload_and_get_image(client: AsyncClient, token_r: TokenResponse)
     print(response)
     assert response.status_code == sc.OK
     assert type(response.content) == bytes
+    # Get uploaded image base64
+    response = await client.get("/images/base64/{}".format(id_), headers=token_r.headers)
+    print(response)
+    assert response.status_code == sc.OK
+    assert type(response.content) == bytes
     # Remove the file
     response = await delete_images(client, token_r, ids=[id_])
     assert response.status_code == sc.OK
