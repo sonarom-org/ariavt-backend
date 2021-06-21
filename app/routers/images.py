@@ -18,8 +18,6 @@ router = APIRouter()
 selection = {}
 
 
-# TODO: obtener solo las imágenes del usuario actual, no las de todos
-#   los usuarios.
 @router.get("/")
 async def read_images(
         ids: Optional[List[int]] = Query(None),
@@ -94,11 +92,15 @@ async def select_images(ids: List[int]):
 
 
 @router.delete("/selection/{selection_hash}", status_code=200)
-async def delete_images(selection_hash: str):
+async def delete_images(
+        selection_hash: str,
+        current_user: UserInDB = Depends(get_current_active_user)
+        ):
     # Get DB records for given ids
     query = select([images], images.c.id.in_(selection[selection_hash]))
     db_images = await database.fetch_all(query)
     # Remove all selected images
     for db_image in db_images:
-        await remove_image(db_image['id'], db_image['relative_path'])
+        await remove_image(db_image['id'], db_image['relative_path'],
+                           current_user)
     return {'removed': selection[selection_hash]}
