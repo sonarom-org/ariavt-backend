@@ -1,37 +1,70 @@
-from typing import Any
-from pydantic import BaseModel
+from pathlib import Path
+from typing import List
+
+from httpx import AsyncClient, Response
+
+from tests.test_models import TokenResponse
 
 
-class TokenResponse(BaseModel):
-    response: Any
-    tokens: dict
-    at: str
-    headers: dict
+async def upload_single_image(
+        client: AsyncClient,
+        token_r: TokenResponse,
+        image_name: str
+        ) -> Response:
+    # Get the complete path of the image to be uploaded
+    file_to_upload = Path('/app_wd/tests/_imgs', image_name)
+    # Open file and build json to post
+    files = {'file': file_to_upload.open('rb')}
+    # Add necessary 'multipart/form-data' header
+    headers = token_r.headers.copy()
+    headers['Content-Type'] = 'multipart/form-data'
+    print('HEADERS', headers)
+    # Post data
+    response = await client.post('/images/',
+                                 files=files,
+                                 headers=token_r.headers)
+    return response
 
 
-class AccessToken:
+async def upload_images(
+        client: AsyncClient,
+        token_r: TokenResponse,
+        image_names: List[str]
+        ) -> Response:
+    # >>> files = [('images', ('foo.png', open('foo.png', 'rb'), 'image/png')),
+    #               ('images', ('bar.png', open('bar.png', 'rb'), 'image/png'))]
+    # >>> r = httpx.post("https://httpbin.org/post", files=files)
+    files = []
+    for image_name in image_names:
+        # Get the complete path of the image to be uploaded
+        file_to_upload = Path('/app_wd/tests/_imgs', image_name)
+        # Open file and build json to post
+        files.append(('files', file_to_upload.open('rb')))
+    # Add necessary 'multipart/form-data' header
+    headers = token_r.headers.copy()
+    headers['Content-Type'] = 'multipart/form-data'
+    print('HEADERS', headers)
+    # Post data
+    response = await client.post('/images/batch-upload',
+                                 files=files,
+                                 headers=token_r.headers)
+    return response
 
-    at = None
 
-    @staticmethod
-    async def get_token(client):
-        if AccessToken.at is not None:
-            return AccessToken.at
-        else:
-            login_data = {
-                "username": "admin",
-                "password": "admin",
-            }
-
-            response = await client.post("/token", data=login_data)
-            response = response
-            tokens = response.json()
-            headers = {
-                'Authorization': 'Bearer ' + tokens["access_token"],
-                'accept': 'application/json',
-            }
-            tr = TokenResponse(response=response,
-                               tokens=tokens,
-                               at=tokens["access_token"],
-                               headers=headers)
-            return tr
+async def delete_images(
+        client: AsyncClient,
+        token_r: TokenResponse,
+        ids: List[int]
+        ) -> Response:
+    headers = token_r.headers.copy()
+    headers['Content-Type'] = 'application/json'
+    print('HEADERS', headers)
+    # Select images to delete
+    response = await client.post('/images/selection', json=ids,
+                                 headers=token_r.headers)
+    selection = response.json()['selection']
+    # Delete selected images
+    response = await client.delete('/images/selection/{}'.format(selection),
+                                   headers=token_r.headers)
+    print(response)
+    return response

@@ -1,15 +1,15 @@
 
 from fastapi import APIRouter, Depends
 
-from app.data.models import User
+from app.data.models import UserInDB
 from app.security.methods import get_current_active_user
 
 
 router = APIRouter()
 
 
-@router.get("/me", response_model=User)
-async def get_users_me(current_user: User = Depends(get_current_active_user)):
+@router.get("/me", response_model=UserInDB)
+async def get_users_me(current_user: UserInDB = Depends(get_current_active_user)):
     """ Side note:
     You can declare the same dependency at the router or decorator level and
     then declare it again in the path operation to get its value.

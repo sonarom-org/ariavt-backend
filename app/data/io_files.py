@@ -60,4 +60,8 @@ async def get_file_base64(filename: str):
 
 async def delete_file(relative_path: str) -> None:
     full_path = os.path.join(DATA_FOLDER, relative_path)
-    await aiof_os.remove(full_path)
+    try:
+        await aiof_os.remove(full_path)
+    except FileNotFoundError:
+        # If the file does not exist, pass
+        pass

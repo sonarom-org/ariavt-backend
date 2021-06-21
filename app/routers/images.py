@@ -18,13 +18,28 @@ router = APIRouter()
 selection = {}
 
 
-@router.get("/", response_model=List[Image])
-async def read_images(ids: Optional[List[int]] = Query(None)):
+# TODO: obtener solo las imágenes del usuario actual, no las de todos
+#   los usuarios.
+@router.get("/")
+async def read_images(
+        ids: Optional[List[int]] = Query(None),
+        user_id: Optional[int] = Query(None)
+        ):
     if ids is not None:
-        query = select([images], images.c.id.in_(ids))
+        # https://stackoverflow.com/questions/8603088/
+        query = select([images]).where(images.c.id.in_(ids))
         db_images = await database.fetch_all(query)
         if not db_images:
             raise HTTPException(status_code=404, detail="Item(s) not found")
+        return db_images
+    elif user_id is not None:
+        query = select([images.c.id]).where(user_id == images.c.user_id)
+        db_images_ids = await database.fetch_all(query)
+        images_ids = []
+        for db_image_id in db_images_ids:
+            images_ids.append(db_image_id['id'])
+        print(images_ids)
+        return {"ids": images_ids}
     else:
         query = images.select()
         return await database.fetch_all(query)
