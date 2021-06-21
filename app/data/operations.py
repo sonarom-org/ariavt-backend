@@ -6,7 +6,7 @@ from fastapi import File, UploadFile, HTTPException
 from sqlalchemy.sql import select
 
 from app.config import IMAGES_FOLDER
-from app.data.models import UserInDB
+from app.data.models import UserInDB, User
 from app.data.database import database, images, users
 from app.data.io_files import save_file, delete_file
 
@@ -22,7 +22,7 @@ async def get_user(username: str) -> UserInDB:
     return user
 
 
-async def add_image(file: UploadFile = File(...), user: UserInDB = None):
+async def add_image(file: UploadFile = File(...), user: User = None):
     relative_path = os.path.join(IMAGES_FOLDER, file.filename)
     print('Writing file {} to disk...'.format(file.filename))
     contents = await file.read()
@@ -39,7 +39,7 @@ async def add_image(file: UploadFile = File(...), user: UserInDB = None):
     return last_record_id
 
 
-async def remove_image(id_: int, relative_path: str, user: UserInDB) -> None:
+async def remove_image(id_: int, relative_path: str, user: User) -> None:
     query = select([images.c.id, images.c.user_id]).where(images.c.id == id_)
     db_images = await database.fetch_one(query)
     # If a record is found

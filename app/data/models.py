@@ -14,6 +14,7 @@ class Image(ImageIn):
 
 
 class User(BaseModel):
+    id: int
     username: str
     full_name: Optional[str] = None
     email: Optional[str] = None
@@ -21,5 +22,4 @@ class User(BaseModel):
 
 
 class UserInDB(User):
-    id: int
     hashed_password: str
