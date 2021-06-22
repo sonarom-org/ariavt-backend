@@ -37,7 +37,7 @@ async def read_images(
         return db_images
     else:
         # Return the images ids of the current user
-        query = select([images.c.id]).where(current_user.id == images.c.user_id)
+        query = select([images]).where(current_user.id == images.c.user_id)
         db_images = await database.fetch_all(query)
         return db_images
 
