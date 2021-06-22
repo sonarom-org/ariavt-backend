@@ -1,4 +1,5 @@
 import base64
+import imghdr
 import os
 import stat
 
@@ -52,8 +53,11 @@ async def get_file_base64(filename: str):
     exists = await file_exists(path)
     if exists:
         with open(path, "rb") as image_file:
-            encoded_image_string = base64.b64encode(image_file.read())
-        return encoded_image_string
+            contents = image_file.read()
+            # Check if uploaded file is actually an image
+            image_format = imghdr.what(None, contents)
+            encoded_image_string = base64.b64encode(contents)
+        return {"image": encoded_image_string, "format": image_format}
     else:
         raise HTTPException(status_code=404, detail="Item not found")
 
