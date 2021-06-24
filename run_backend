@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
 
-if [ "test" == "$1" ]; then
+if [ "test" = "$1" ]; then
     DATABASE_URL="postgresql://postgres:postgres@c_postgresdb_test:5433/ariavt"
-elif [ "dev" == "$1" ]; then
+elif [ "dev" = "$1" ]; then
     DATABASE_URL="postgresql://postgres:postgres@c_postgresdb:5432/ariavt"
-elif [ "local" == "$1" ]; then
+elif [ "local" = "$1" ]; then
     DATABASE_URL="postgresql://postgres:postgres@localhost:5433/ariavt"
 else
     echo "Error: unknown database."
