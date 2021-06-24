@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  postgresdb_test:
+    container_name: c_postgresdb_test
+    build:
+      context: .
+      dockerfile: db.dockerfile
+    restart: always
+    environment:
+      - POSTGRES_DB=ariavt
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres 
+    ports:
+      - "5433:5433"
+    command: -p 5433
+    networks:
+      - test-net
+
   backend_test:
     build:
       context: .
@@ -9,10 +25,11 @@ services:
     ports:
       - 8000:8000
     networks:
-      - be_dev-net
+      - test-net
     command: ["python3", "-m", "pytest", "-s"]
 
+
 networks:
-  be_dev-net:
-    external:
-      name: dev-net
+  test-net:
+    name: test-net
+    driver: bridge
