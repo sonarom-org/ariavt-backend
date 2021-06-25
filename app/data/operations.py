@@ -2,7 +2,7 @@ import http
 import os
 import imghdr
 
-from fastapi import File, UploadFile, HTTPException
+from fastapi import File, UploadFile, HTTPException, Form
 from sqlalchemy.sql import select
 
 from app.config import IMAGES_FOLDER
@@ -22,7 +22,12 @@ async def get_user(username: str) -> UserInDB:
     return user
 
 
-async def add_image(file: UploadFile = File(...), user: User = None):
+async def add_image(
+        file: UploadFile = File(...),
+        user: User = None,
+        title: str = '',
+        text: str = '',
+        ):
     relative_path = os.path.join(IMAGES_FOLDER, file.filename)
     print('Writing file {} to disk...'.format(file.filename))
     contents = await file.read()
@@ -32,7 +37,8 @@ async def add_image(file: UploadFile = File(...), user: User = None):
         raise HTTPException(status_code=422,
                             detail="Uploaded file is not an image")
     await save_file(relative_path, contents)
-    query = images.insert().values(text="Image",
+    query = images.insert().values(title=title,
+                                   text=text,
                                    relative_path=relative_path,
                                    user_id=user.id)
     last_record_id = await database.execute(query)
