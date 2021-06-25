@@ -1,6 +1,8 @@
+import time
 
 import databases
 import sqlalchemy
+from sqlalchemy import exc
 
 from app.config import DATABASE_URL
 
@@ -14,6 +16,7 @@ images = sqlalchemy.Table(
     "images",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("title", sqlalchemy.String),
     sqlalchemy.Column("text", sqlalchemy.String),
     sqlalchemy.Column("relative_path", sqlalchemy.String),
     sqlalchemy.Column("user_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"),
@@ -31,8 +34,14 @@ users = sqlalchemy.Table(
     sqlalchemy.Column("disabled", sqlalchemy.Boolean),
 )
 
-engine = sqlalchemy.create_engine(
-    DATABASE_URL
-)
-metadata.create_all(engine)
-
+# Wait until the database is available
+created = False
+while not created:
+    try:
+        engine = sqlalchemy.create_engine(
+            DATABASE_URL
+        )
+        metadata.create_all(engine)
+        created = True
+    except exc.OperationalError:
+        time.sleep(5)

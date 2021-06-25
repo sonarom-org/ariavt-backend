@@ -22,6 +22,10 @@ async def upload_single_image(
     # Post data
     response = await client.post('/images/',
                                  files=files,
+                                 data={
+                                     "text": "text",
+                                     "title": "text",
+                                 },
                                  headers=token_r.headers)
     return response
 

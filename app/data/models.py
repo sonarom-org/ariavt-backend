@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class ImageIn(BaseModel):
     text: Optional[str]
     relative_path: str
+    title: Optional[str]
 
 
 class Image(ImageIn):
