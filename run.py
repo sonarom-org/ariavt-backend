@@ -54,7 +54,7 @@ else:
     arguments_error('Bad arguments')
 
 
-extra_args = ' '.join([str(v) for v in modes[mode]['extra_args']])
+extra_args = ' '.join([v for v in modes[mode]['extra_args']])
 
 for command in modes[mode]['remove_commands']:
     os.system(command)

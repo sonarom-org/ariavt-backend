@@ -20,6 +20,7 @@ class User(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
     disabled: Optional[bool] = None
+    role: str
 
 
 class UserInDB(User):

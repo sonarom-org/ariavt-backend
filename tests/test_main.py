@@ -4,8 +4,10 @@ import pytest
 from http import HTTPStatus as sc
 from httpx import AsyncClient
 
-from tests.test_models import AccessToken, TokenResponse
+from tests.models_test import AccessToken, TokenResponse
 from tests.utils import upload_images, upload_single_image, delete_images
+
+from app.globals import USER_ROLE
 
 from app.main import app
 
@@ -203,3 +205,131 @@ async def test_get_user_images(client: AsyncClient, token_r: TokenResponse):
     # Check if there are no images
     response = await client.get("/images/", headers=token_r.headers)
     assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_add_get_delete_user(client: AsyncClient, token_r: TokenResponse):
+
+    user1 = {
+        "username": "user1",
+        "full_name": "User One",
+        "email": "user1@mail.com",
+        "role": USER_ROLE,
+        "password": "user1"
+    }
+
+    user2 = {
+        "username": "user2",
+        "full_name": "User One",
+        "email": "user2@mail.com",
+        "role": USER_ROLE,
+        "password": "user2"
+    }
+
+    user3 = {
+        "username": "user3",
+        "full_name": "User One",
+        "email": "user3@mail.com",
+        "role": USER_ROLE,
+        "password": "user3"
+    }
+
+    # -----------------------------------------------------------------
+
+    # -> Add users
+
+    response = await client.post(
+        "/users/",
+        data=user1,
+        headers=token_r.headers)
+
+    assert response.status_code == sc.OK
+    user1_id = response.json()['id']
+
+    response = await client.post(
+        "/users/",
+        data=user2,
+        headers=token_r.headers)
+
+    print(response.json())
+    assert response.status_code == sc.OK
+    assert response.json()['id']
+    user2_id = response.json()['id']
+
+    # -> Get added users
+
+    response = await client.get(
+        "/users/{}".format(user1_id),
+        headers=token_r.headers)
+
+    print(response.json())
+    assert response.status_code == sc.OK
+    assert response.json()['id']
+    assert response.json()['username']
+    assert response.json()['full_name']
+    assert response.json()['role']
+    assert response.json()['email']
+
+    response = await client.get(
+        "/users/{}".format(user2_id),
+        headers=token_r.headers)
+
+    print(response.json())
+    assert response.status_code == sc.OK
+    assert response.json()['id']
+    assert response.json()['username']
+    assert response.json()['full_name']
+    assert response.json()['role']
+    assert response.json()['email']
+
+    # -----------------------------------------------------------------
+    # => Try to perform admin operations with user account
+
+    user_tr = await AccessToken.get_certain_token(client, "user1", "user1")
+
+    response = await client.post(
+        "/users/",
+        data=user3,
+        headers=user_tr.headers)
+    assert response.status_code == sc.UNAUTHORIZED
+
+    response = await client.get(
+        "/users/{}".format(user2_id),
+        headers=user_tr.headers)
+    assert response.status_code == sc.UNAUTHORIZED
+
+    # - Delete added user
+    response = await client.delete(
+        "/users/{}".format(user2_id),
+        headers=user_tr.headers)
+    assert response.status_code == sc.UNAUTHORIZED
+
+    # -----------------------------------------------------------------
+
+    # -> Delete added users
+
+    response = await client.delete(
+        "/users/{}".format(user1_id),
+        headers=token_r.headers)
+    assert response.status_code == sc.OK
+
+    response = await client.delete(
+        "/users/{}".format(user2_id),
+        headers=token_r.headers)
+
+    print(response.json())
+    assert response.status_code == sc.OK
+    assert response.json()['removed']
+    assert response.json()['removed'] == user2_id
+
+    # -> Get deleted users
+
+    response = await client.get(
+        "/users/{}".format(user1_id),
+        headers=token_r.headers)
+    assert response.status_code == sc.NOT_FOUND
+
+    response = await client.get(
+        "/users/{}".format(user2_id),
+        headers=token_r.headers)
+    assert response.status_code == sc.NOT_FOUND
