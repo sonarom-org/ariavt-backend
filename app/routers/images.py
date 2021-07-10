@@ -67,7 +67,7 @@ async def upload_image(
         file: UploadFile = File(...),
         current_user: User = Depends(get_current_active_user),
         title: str = Form(...),
-        text: str = Form(...)
+        text: str = Form('')
         ):
     last_record_id = await add_image(file, current_user, title, text)
     return {"id": last_record_id}

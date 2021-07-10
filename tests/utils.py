@@ -3,7 +3,7 @@ from typing import List
 
 from httpx import AsyncClient, Response
 
-from tests.test_models import TokenResponse
+from tests.models_test import TokenResponse
 
 
 async def upload_single_image(
@@ -16,9 +16,9 @@ async def upload_single_image(
     # Open file and build json to post
     files = {'file': file_to_upload.open('rb')}
     # Add necessary 'multipart/form-data' header
-    headers = token_r.headers.copy()
-    headers['Content-Type'] = 'multipart/form-data'
-    print('HEADERS', headers)
+    # headers = token_r.headers.copy()
+    # headers['Content-Type'] = 'multipart/form-data'
+    # print('HEADERS', headers)
     # Post data
     response = await client.post('/images/',
                                  files=files,

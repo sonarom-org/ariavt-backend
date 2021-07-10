@@ -73,6 +73,7 @@ async def create_admin():
                                       full_name='admin',
                                       email='admin@ariavt.org',
                                       disabled=False,
+                                      role='admin',
                                       hashed_password=hashed_password)
         _ = await database.execute(query)
 
