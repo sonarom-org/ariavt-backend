@@ -80,6 +80,20 @@ async def create_admin():
     # print(admin_user)
 
 
+async def create_sample_user():
+    admin_user = await get_user('user')
+    if admin_user is None:
+        hashed_password = get_password_hash('user')
+
+        query = users.insert().values(username='user',
+                                      full_name='user',
+                                      email='user@ariavt.org',
+                                      disabled=False,
+                                      role='user',
+                                      hashed_password=hashed_password)
+        _ = await database.execute(query)
+
+
 async def authenticate_user(username: str, password: str):
     user = await get_user(username)
     if not user:

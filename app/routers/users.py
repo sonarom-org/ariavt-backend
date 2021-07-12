@@ -1,3 +1,4 @@
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.sql import select
@@ -79,11 +80,11 @@ async def get_user(
 
 
 @router.delete("/{user_id}")
-async def get_user(
+async def delete_user(
         user_id: int,
         current_user: User = Depends(get_current_active_user)
 ):
-    if current_user.role == ADMIN_ROLE:
+    if current_user.role == ADMIN_ROLE and user_id != current_user.id:
         query = select([users]).where(users.c.id == user_id)
         db_user = await database.fetch_one(query)
         if not db_user:
@@ -92,6 +93,23 @@ async def get_user(
             query = users.delete().where(users.columns.id == user_id)
             await database.execute(query)
             return {'removed': user_id}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Operation not permitted",
+        )
+
+
+@router.get("/", response_model=List[User])
+async def get_all_users(
+        current_user: User = Depends(get_current_active_user)
+):
+    if current_user.role == ADMIN_ROLE:
+        query = select([users])
+        db_users = await database.fetch_all(query)
+        if not db_users:
+            raise HTTPException(status_code=404, detail="No user found")
+        return db_users
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
