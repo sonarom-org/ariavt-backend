@@ -25,6 +25,8 @@ async def token_r(client: AsyncClient):
     return tr
 
 
+# =====================================================================
+
 @pytest.mark.order(1)
 @pytest.mark.asyncio
 async def test_delete_all_images(
@@ -44,12 +46,16 @@ async def test_delete_all_images(
     assert 'removed' in response.json()
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_get_images_not_authenticated(client: AsyncClient):
     response = await client.get("/images/")
     print(response)
     assert response.status_code == sc.UNAUTHORIZED
 
+
+# =====================================================================
 
 @pytest.mark.asyncio
 async def test_get_access_token(token_r: TokenResponse):
@@ -58,6 +64,8 @@ async def test_get_access_token(token_r: TokenResponse):
     assert "access_token" in token_r.tokens
     assert token_r.at
 
+
+# =====================================================================
 
 @pytest.mark.asyncio
 async def test_verify_token(
@@ -75,6 +83,8 @@ async def test_verify_token(
     assert response.status_code == sc.UNAUTHORIZED
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_get_images_authenticated(
         client: AsyncClient,
@@ -85,6 +95,8 @@ async def test_get_images_authenticated(
     assert response.status_code == sc.OK
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_get_current_user_unauthorized(
         client: AsyncClient):
@@ -92,6 +104,8 @@ async def test_get_current_user_unauthorized(
     print(response)
     assert response.status_code == sc.UNAUTHORIZED
 
+
+# =====================================================================
 
 @pytest.mark.asyncio
 async def test_get_current_user(client: AsyncClient, token_r: TokenResponse):
@@ -104,86 +118,120 @@ async def test_get_current_user(client: AsyncClient, token_r: TokenResponse):
     assert not response_json['disabled']
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_upload_image(client: AsyncClient, token_r: TokenResponse):
     image_name = 'c_im0236.png'
+
     # -> Upload single image
+
     response = await upload_single_image(client, token_r, image_name)
     print(response)
     assert response.status_code == sc.OK
     id_ = response.json()['id']
+
     # -> Remove uploaded image
+
     response = await delete_images(client, token_r, ids=[id_])
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_upload_and_get_image(client: AsyncClient, token_r: TokenResponse):
     image_name = 'c_im0236.png'
+
     # -> Upload image
+
     response = await upload_single_image(client, token_r, image_name)
     print(response)
     assert response.status_code == sc.OK
     assert response.json()['id']
     id_ = response.json()['id']
+
     # -> Get uploaded image
+
     response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
     assert response.status_code == sc.OK
     assert type(response.content) == bytes
+
     # -> Get uploaded image base64
+
     response = await client.get("/images/base64/{}".format(id_), headers=token_r.headers)
     print(response)
     assert response.status_code == sc.OK
     assert type(response.content) == bytes
+
     # -> Remove the file
+
     response = await delete_images(client, token_r, ids=[id_])
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
+
     # -> Try fetching the removed file
+
     response = await client.get("/images/{}".format(id_), headers=token_r.headers)
     print(response)
     assert response.status_code == sc.NOT_FOUND
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_upload_and_get_images(client: AsyncClient, token_r: TokenResponse):
     image_names = ['c_im0236.png', 'c_im0237.png', 'c_im0238.png']
+
     # -> Upload image
+
     response = await upload_images(client, token_r, image_names)
     print(response)
     assert response.status_code == sc.OK
     assert response.json()['ids']
     ids = response.json()['ids']
+
     # -> Get uploaded image
+
     params = {'ids': ids}
     response = await client.get("/images/", params=params, headers=token_r.headers)
     print(response)
     assert response.status_code == sc.OK
     assert type(response.content) == bytes
+
     # -> Remove the file
+
     response = await delete_images(client, token_r, ids=ids)
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
     print(response.json())
+
     # -> Try fetching the removed file
+
     print('PARAMS', params)
     response = await client.get("/images/", params=params, headers=token_r.headers)
     print(response.json())
     assert response.status_code == sc.NOT_FOUND
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
 async def test_get_user_images(client: AsyncClient, token_r: TokenResponse):
     image_names = ['c_im0236.png', 'c_im0237.png']
-    # Upload image
+
+    # -> Upload image
+
     response = await upload_images(client, token_r, image_names)
     print(response)
     assert response.status_code == sc.OK
     assert response.json()['ids']
     ids = response.json()['ids']
+
     # -> Get uploaded images
+
     images_ids = {'ids': ids}
     # Get user id
     response = await client.get("/users/me", headers=token_r.headers)
@@ -197,7 +245,9 @@ async def test_get_user_images(client: AsyncClient, token_r: TokenResponse):
     print(response.json())
     received_ids = {"ids": [image['id'] for image in response.json()]}
     assert images_ids == received_ids
+
     # -> Remove images
+
     response = await delete_images(client, token_r, ids=ids)
     assert response.status_code == sc.OK
     assert 'removed' in response.json()
@@ -207,8 +257,10 @@ async def test_get_user_images(client: AsyncClient, token_r: TokenResponse):
     assert response.json() == []
 
 
+# =====================================================================
+
 @pytest.mark.asyncio
-async def test_add_get_delete_user(client: AsyncClient, token_r: TokenResponse):
+async def test_user_methods(client: AsyncClient, token_r: TokenResponse):
 
     user1 = {
         "username": "user1",
@@ -269,6 +321,7 @@ async def test_add_get_delete_user(client: AsyncClient, token_r: TokenResponse):
     assert response.json()['full_name']
     assert response.json()['role']
     assert response.json()['email']
+    assert response.json()['username'] == user1['username']
 
     response = await client.get(
         "/users/{}".format(user2_id),
@@ -282,10 +335,76 @@ async def test_add_get_delete_user(client: AsyncClient, token_r: TokenResponse):
     assert response.json()['role']
     assert response.json()['email']
 
+    # -> Get all users
+
+    response = await client.get("/users/", headers=token_r.headers)
+    print(response.json())
+    assert response.status_code == sc.OK
+    # 4: 2 default users (admin, user) + 2 added users
+    assert len(response.json()) == 4
+
+    # -----------------------------------------------------------------
+    # => Update user
+
+    # -> Update user as admin
+
+    # - Update user
+
+    user1_updated = user1.copy()
+    del user1_updated['username']
+    user1_updated['full_name'] = 'User 1 Updated'
+    response = await client.put(
+        "/users/{}".format(user1_id),
+        data=user1_updated,
+        headers=token_r.headers)
+    assert response.status_code == sc.OK
+
+    # - Get updated user
+
+    response = await client.get(
+        "/users/{}".format(user1_id),
+        headers=token_r.headers)
+
+    print(response.json())
+    assert response.status_code == sc.OK
+    assert response.json()['full_name'] == 'User 1 Updated'
+
+    # -> Update user as user
+
+    user_tr = await AccessToken.get_certain_token(client, "user1", "user1")
+
+    # - Update user
+
+    user1_updated = user1.copy()
+    del user1_updated['username']
+    user1_updated['full_name'] = 'User 1 Updated (II)'
+    user1_updated['old_password'] = user1['password']
+    user1_updated['password'] = 'new_password'
+    print('user1_updated', user1_updated)
+
+    response = await client.put(
+        "/users/{}".format(user1_id),
+        data=user1_updated,
+        headers=user_tr.headers)
+    if response.status_code != sc.OK:
+        print(response.json())
+    assert response.status_code == sc.OK
+
+    # - Get updated user
+
+    response = await client.get(
+        "/users/{}".format(user1_id),
+        headers=token_r.headers)
+
+    print(response.json())
+    assert response.status_code == sc.OK
+    assert response.json()['full_name'] == 'User 1 Updated (II)'
+
     # -----------------------------------------------------------------
     # => Try to perform admin operations with user account
 
-    user_tr = await AccessToken.get_certain_token(client, "user1", "user1")
+    user_tr = await AccessToken.get_certain_token(
+        client, "user1", "new_password")
 
     response = await client.post(
         "/users/",
