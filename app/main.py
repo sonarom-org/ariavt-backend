@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.data.database import database
 from app.data.io_files import create_folders
-from app.security.methods import create_admin, get_current_active_user
+from app.security.methods import create_admin, create_sample_user, \
+        get_current_active_user
 
 app = FastAPI()
 
@@ -41,6 +42,7 @@ app.include_router(images.router,
 async def startup():
     await database.connect()
     await create_admin()
+    await create_sample_user()
     await create_folders()
 
 

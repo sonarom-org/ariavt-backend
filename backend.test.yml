@@ -22,8 +22,6 @@ services:
       context: .
       dockerfile: backend.dockerfile
     container_name: c_fastapi_backend_test
-    ports:
-      - 8000:8000
     networks:
       - test-net
     command: ["python3", "-m", "pytest", "-s"]
