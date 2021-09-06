@@ -9,7 +9,9 @@ from tests.models_test import TokenResponse
 async def upload_single_image(
         client: AsyncClient,
         token_r: TokenResponse,
-        image_name: str
+        image_name: str,
+        title: str = 'text',
+        text: str = 'text',
         ) -> Response:
     # Get the complete path of the image to be uploaded
     file_to_upload = Path('/app_wd/tests/_imgs', image_name)
@@ -23,8 +25,8 @@ async def upload_single_image(
     response = await client.post('/images/',
                                  files=files,
                                  data={
-                                     "text": "text",
-                                     "title": "text",
+                                     "text": text,
+                                     "title": title,
                                  },
                                  headers=token_r.headers)
     return response

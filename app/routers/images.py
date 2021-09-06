@@ -2,7 +2,8 @@
 from typing import List, Optional
 import hashlib
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Query, Form
+from fastapi import APIRouter, File, UploadFile, HTTPException, Query, Form,\
+    status
 from fastapi import Depends
 from sqlalchemy.sql import select
 
@@ -105,3 +106,28 @@ async def delete_images(
         await remove_image(db_image['id'], db_image['relative_path'],
                            current_user)
     return {'removed': selection[selection_hash]}
+
+
+@router.put("/{image_id}")
+async def update_image(
+        image_id: int,
+        text: Optional[str] = Form(None),
+        title: Optional[str] = Form(None),
+        current_user: User = Depends(get_current_active_user)
+):
+    # To perform the update, the image must be owned by the user
+    query = select([images]).where(images.c.id == image_id)
+    db_image = await database.fetch_one(query)
+    if db_image['user_id'] != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The user does not own the image.",
+        )
+
+    # If the image is owned by the user, perform the update
+    values = dict(title=title, text=text,)
+
+    query = images.update().values(**values).where(images.c.id == image_id)
+    # TODO: esto no devuelve nada con el update
+    last_record_id = await database.execute(query)
+    return {"id": last_record_id}
