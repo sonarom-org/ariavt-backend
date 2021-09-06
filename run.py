@@ -3,7 +3,7 @@
 import sys
 import os
 
-usage = 'Usage: run_backend [dev|test] [--remove-prev]'
+usage = 'Usage: ./run.py [dev|test] [--remove-prev]'
 
 options = ['--remove-prev']
 modes = {
