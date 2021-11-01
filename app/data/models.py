@@ -25,3 +25,11 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
+
+
+class Service(BaseModel):
+    id: int
+    name: str
+    url: str
+    full_name: Optional[str] = None
+    description: Optional[str] = None
