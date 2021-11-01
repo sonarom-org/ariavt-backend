@@ -1,5 +1,3 @@
-
-from asgi_lifespan import LifespanManager
 import pytest
 from http import HTTPStatus as sc
 from httpx import AsyncClient
@@ -9,23 +7,8 @@ from tests.utils import upload_images, upload_single_image, delete_images
 
 from app.globals import USER_ROLE
 
-from app.main import app
-
-
-@pytest.fixture
-async def client():
-    async with LifespanManager(app):
-        async with AsyncClient(app=app, base_url="http://localhost:8000") as ac:
-            yield ac
-
-
-@pytest.fixture
-async def token_r(client: AsyncClient):
-    tr = await AccessToken.get_token(client)
-    return tr
-
-
 # =====================================================================
+
 
 @pytest.mark.order(1)
 @pytest.mark.asyncio
