@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.sql import select
 
 from app.data.models import User
-from app.security.methods import get_current_active_user, get_password_hash,\
-    verify_password
+from app.security.methods import (
+    get_current_active_user, get_password_hash, verify_password
+)
 from app.globals import ADMIN_ROLE
 from app.data.database import database, users
+
 
 router = APIRouter()
 
