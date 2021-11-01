@@ -1,8 +1,11 @@
+from pathlib import Path
+
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, Response
 from http import HTTPStatus as StC
 
 from tests.models_test import AccessToken, TokenResponse
+from tests.utils import upload_single_image
 
 
 @pytest.mark.asyncio
@@ -163,3 +166,62 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         headers=token_r.headers
     )
     assert response.status_code == StC.NOT_FOUND
+
+
+async def upload_single_image_to_service(
+        client: AsyncClient,
+        token_r: TokenResponse,
+        image_name: str,
+) -> Response:
+    # Get the complete path of the image to be uploaded
+    file_to_upload = Path('/app_wd/tests/_imgs', image_name)
+    # Open file and build json to post
+    files = {'file': file_to_upload.open('rb')}
+    # Add necessary 'multipart/form-data' header
+    # headers = token_r.headers.copy()
+    # headers['Content-Type'] = 'multipart/form-data'
+    # print('HEADERS', headers)
+    # Post data
+    response = await client.post(
+        '/services/empty-service',
+        files=files,
+        headers=token_r.headers
+    )
+    return response
+
+
+@pytest.mark.asyncio
+async def test_service_image(client: AsyncClient, token_r: TokenResponse):
+
+    # -> Upload single image
+    image_name = 'c_im0236.png'
+    response = await upload_single_image(client, token_r, image_name)
+    print(response)
+    assert response.status_code == StC.OK
+    image_id = response.json()['id']
+
+    # -> Add service
+    service_1 = {
+        "name": "service",
+        "url": "http://127.0.0.1:8888/",
+        "full_name": "Service",
+        "description": "Service for image analysis",
+    }
+
+    response = await client.post(
+        "/services/",
+        data=service_1,
+        headers=token_r.headers
+    )
+
+    assert response.status_code == StC.OK
+    service_id = response.json()['id']
+
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+
+    assert response.status_code == StC.OK
+    assert type(response.content) == bytes

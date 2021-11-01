@@ -48,6 +48,16 @@ async def get_file(filename: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="Item not found")
 
 
+async def get_file_bytes(filename: str) -> bytes:
+    path = os.path.join(DATA_FOLDER, filename)
+    exists = await file_exists(path)
+    if exists:
+        async with aiof.open(path, mode='rb') as img:
+            return await img.read()
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+
 async def get_file_base64(filename: str):
     path = os.path.join(DATA_FOLDER, filename)
     exists = await file_exists(path)
