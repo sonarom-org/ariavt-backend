@@ -1,16 +1,22 @@
+import imghdr
+import tempfile
 from typing import List, Union, Optional
 
-from fastapi import APIRouter, HTTPException, Form, status
-from fastapi import Depends
+from fastapi import (
+    APIRouter, HTTPException, Form, status, UploadFile, Depends, File
+)
+from fastapi.openapi.models import Response
+from pydantic.class_validators import Any
 from sqlalchemy.sql import select
+from httpx import AsyncClient
+from starlette.responses import FileResponse
 
 from app.data.models import User, Service
 from app.data.database import services
 from app.security.methods import get_current_active_user
 from app.globals import ADMIN_ROLE
 from app.data.database import database
-from app.routers.images import get_image
-
+from app.routers.images import get_image, get_image_bytes
 
 router = APIRouter()
 
@@ -40,8 +46,8 @@ async def add_service(
         )
 
 
-@router.get("/{service_id}", response_model=Service)  # Union[Service, None]
-async def get_service(service_id: int):  #, image_id: Optional[int] = None):
+@router.get("/{service_id}", response_model=Union[Service, Any])
+async def get_service(service_id: int, image_id: Optional[int] = None):
     query = select([services]).where(services.c.id == service_id)
     db_service = await database.fetch_one(query)
     if not db_service:
@@ -49,12 +55,41 @@ async def get_service(service_id: int):  #, image_id: Optional[int] = None):
     # If image_id is not None, then send the image to the service and
     #   return the result.
     #   Else, return the service.
-    # if image_id is not None:
-    #     # TODO: send image to the service and return the result.
-    #     image = await get_image(image_id)
-    #     return image
-    # else:
-    return db_service
+    if image_id is not None:
+        image = await get_image_bytes(image_id)
+
+        async with AsyncClient() as ac:
+            # Build json to post
+            files = {'file': image}
+            # Add necessary 'multipart/form-data' header
+            # headers = token_r.headers.copy()
+            headers = {'accept': 'application/json'}
+            # print('HEADERS', headers)
+            # Post data
+            response = await ac.post(
+                db_service['url'],
+                files=files,
+                headers=headers
+            )
+
+            # Create temporary image file and return it
+            img_bytes = response.content
+            img_type = imghdr.what(None, img_bytes)
+
+            if img_type is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail='Invalid image returned from service'
+                )
+
+            with tempfile.NamedTemporaryFile(
+                mode='w+b', suffix=f'.{img_type}', delete=False
+            ) as F_OUT:
+                F_OUT.write(img_bytes)
+                return FileResponse(F_OUT.name, media_type=f'image/{img_type}')
+
+    else:
+        return db_service
 
 
 @router.delete("/{service_id}")

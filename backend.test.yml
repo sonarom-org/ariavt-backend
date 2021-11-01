@@ -24,7 +24,9 @@ services:
     container_name: c_fastapi_backend_test
     networks:
       - test-net
-    command: ["python3", "-m", "pytest", "-s"]
+    command: >
+      sh -c "(python3 -m uvicorn tests.echo_service:service --port 8888 &)
+      && python3 -m pytest -s"
 
 
 networks:
