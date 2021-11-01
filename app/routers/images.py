@@ -1,9 +1,9 @@
-
 from typing import List, Optional
 import hashlib
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Query, Form,\
-    status
+from fastapi import (
+    APIRouter, File, UploadFile, HTTPException, Query, Form, status
+)
 from fastapi import Depends
 from sqlalchemy.sql import select
 
@@ -24,7 +24,7 @@ async def read_images(
         ids: Optional[List[int]] = Query(None),
         user_id: Optional[int] = Query(None),
         current_user: User = Depends(get_current_active_user)
-        ):
+):
     if ids is not None:
         # https://stackoverflow.com/questions/8603088/
         query = select([images]).where(images.c.id.in_(ids))
@@ -54,7 +54,7 @@ async def get_image(id_: int):
 
 
 @router.get("/base64/{id_}")
-async def get_image(id_: int):
+async def get_image_b64(id_: int):
     query = images.select().where(images.columns.id == id_)
     db_image = await database.fetch_one(query)
     if db_image is not None:
@@ -69,7 +69,7 @@ async def upload_image(
         current_user: User = Depends(get_current_active_user),
         title: str = Form(...),
         text: str = Form('')
-        ):
+):
     last_record_id = await add_image(file, current_user, title, text)
     return {"id": last_record_id}
 
@@ -78,7 +78,7 @@ async def upload_image(
 async def upload_images(
         files: List[UploadFile] = File(...),
         current_user: User = Depends(get_current_active_user)
-        ):
+):
     ids = []
     for file in files:
         last_record_id = await add_image(file, current_user)
@@ -97,7 +97,7 @@ async def select_images(ids: List[int]):
 async def delete_images(
         selection_hash: str,
         current_user: User = Depends(get_current_active_user)
-        ):
+):
     # Get DB records for given ids
     query = select([images], images.c.id.in_(selection[selection_hash]))
     db_images = await database.fetch_all(query)
@@ -125,7 +125,11 @@ async def update_image(
         )
 
     # If the image is owned by the user, perform the update
-    values = dict(title=title, text=text,)
+    values = dict()
+    if title:
+        values['title'] = title
+    if text:
+        values['text'] = text
 
     query = images.update().values(**values).where(images.c.id == image_id)
     # TODO: esto no devuelve nada con el update
