@@ -31,5 +31,14 @@ class Service(BaseModel):
     id: int
     name: str
     url: str
+    result_type: str
     full_name: Optional[str] = None
     description: Optional[str] = None
+
+
+class Result(BaseModel):
+    id: int
+    name: Optional[str] = None
+    result_type: str
+    relative_path: str
+    image_id: int
