@@ -41,10 +41,10 @@ async def save_file(relative_path: str, contents: bytes) -> None:
         await f.write(contents)
 
 
-async def read_json_file(relative_path: str) -> Dict:
+async def get_json_from_file(relative_path: str) -> Dict:
     full_path = os.path.join(DATA_FOLDER, relative_path)
-    async with aiof.open(full_path, mode='r') as f:
-        return json.loads(await f.read())
+    async with aiof.open(full_path, mode='r') as fp:
+        return json.loads(await fp.read())
 
 
 async def get_file(filename: str) -> FileResponse:

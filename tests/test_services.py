@@ -1,3 +1,4 @@
+import imghdr
 from pathlib import Path
 
 import pytest
@@ -228,6 +229,22 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
 
     assert response.status_code == StC.OK
     assert type(response.content) == bytes
+    image_type = imghdr.what(None, response.content)
+    assert image_type == 'png'
+
+    # TODO: ESTE TEST FALLA
+    # Retrieve again the same result. To test whether the application
+    #   is able to correctly return the previously stored result or not.
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+
+    assert response.status_code == StC.OK
+    assert type(response.content) == bytes
+    image_type = imghdr.what(None, response.content)
+    assert image_type == 'png'
 
     # -> Add service: measurement result
     service_1 = {
@@ -247,6 +264,17 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
     assert response.status_code == StC.OK
     service_id = response.json()['id']
 
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+
+    assert response.status_code == StC.OK
+    assert response.json()['image'] == 'OK'
+
+    # Retrieve again the same result. To test whether the application
+    #   is able to correctly return the previously stored result or not.
     response = await client.get(
         f"/services/{service_id}",
         params={'image_id': image_id},

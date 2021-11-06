@@ -1,4 +1,3 @@
-
 from typing import Optional
 from pydantic import BaseModel
 
@@ -38,7 +37,6 @@ class Service(BaseModel):
 
 class Result(BaseModel):
     id: int
-    name: Optional[str] = None
-    result_type: str
     relative_path: str
     image_id: int
+    service_id: int

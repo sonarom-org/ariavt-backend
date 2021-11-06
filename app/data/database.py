@@ -56,11 +56,13 @@ results = sqlalchemy.Table(
     "results",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("name", sqlalchemy.String),
-    sqlalchemy.Column("result_type", sqlalchemy.String, nullable=False),
     sqlalchemy.Column("relative_path", sqlalchemy.String, nullable=False),
     sqlalchemy.Column(
         "image_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("images.id"),
+        nullable=False
+    ),
+    sqlalchemy.Column(
+        "service_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("services.id"),
         nullable=False
     ),
 )

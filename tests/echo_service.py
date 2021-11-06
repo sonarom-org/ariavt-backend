@@ -35,7 +35,7 @@ async def echo_random_result(
         file: UploadFile = File(...),
 ):
     """Simple echo service for testing purposes.
-    It receives a file and returns it.
+    It receives a file and returns a message in JSON format.
     """
     img_bytes = await file.read()
     img_type = imghdr.what(None, img_bytes)
@@ -47,3 +47,9 @@ async def echo_random_result(
         )
 
     return {'image': 'OK'}
+
+
+@service.get("/ping")
+async def echo_random_result():
+    """Simple ping."""
+    return {'ping': 'OK'}
