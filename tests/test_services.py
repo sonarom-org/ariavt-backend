@@ -232,7 +232,6 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
     image_type = imghdr.what(None, response.content)
     assert image_type == 'png'
 
-    # TODO: ESTE TEST FALLA
     # Retrieve again the same result. To test whether the application
     #   is able to correctly return the previously stored result or not.
     response = await client.get(
