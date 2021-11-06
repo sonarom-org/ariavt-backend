@@ -1,3 +1,4 @@
+import imghdr
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,7 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
     service_1 = {
         "name": "service_1",
         "url": "http://localhost:8080",
+        "result_type": "image",
         "full_name": "Service 1",
         "description": "Service 1 for image analysis",
     }
@@ -27,6 +29,7 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
     service_2 = {
         "name": "service_2",
         "url": "http://localhost:8080",
+        "result_type": "image",
         "full_name": "2nd Service",
         "description": "Second service for image analysis",
     }
@@ -200,10 +203,11 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
     assert response.status_code == StC.OK
     image_id = response.json()['id']
 
-    # -> Add service
+    # -> Add service: image result
     service_1 = {
         "name": "service",
         "url": "http://127.0.0.1:8888/",
+        "result_type": "image",
         "full_name": "Service",
         "description": "Service for image analysis",
     }
@@ -225,3 +229,57 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
 
     assert response.status_code == StC.OK
     assert type(response.content) == bytes
+    image_type = imghdr.what(None, response.content)
+    assert image_type == 'png'
+
+    # TODO: ESTE TEST FALLA
+    # Retrieve again the same result. To test whether the application
+    #   is able to correctly return the previously stored result or not.
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+
+    assert response.status_code == StC.OK
+    assert type(response.content) == bytes
+    image_type = imghdr.what(None, response.content)
+    assert image_type == 'png'
+
+    # -> Add service: measurement result
+    service_1 = {
+        "name": "service_json",
+        "url": "http://127.0.0.1:8888/json",
+        "result_type": "measurement",
+        "full_name": "Service JSON",
+        "description": "Service for image analysis",
+    }
+
+    response = await client.post(
+        "/services/",
+        data=service_1,
+        headers=token_r.headers
+    )
+
+    assert response.status_code == StC.OK
+    service_id = response.json()['id']
+
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+
+    assert response.status_code == StC.OK
+    assert response.json()['image'] == 'OK'
+
+    # Retrieve again the same result. To test whether the application
+    #   is able to correctly return the previously stored result or not.
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+
+    assert response.status_code == StC.OK
+    assert response.json()['image'] == 'OK'

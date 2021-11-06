@@ -1,3 +1,5 @@
+import json
+from typing import Dict
 import base64
 import imghdr
 import os
@@ -10,7 +12,7 @@ import aiofiles as aiof
 import aiofiles.os as aiof_os
 from aiofiles.os import stat as aiof_stat
 
-from app.config import DATA_FOLDER, IMAGES_FOLDER
+from app.config import DATA_FOLDER, IMAGES_FOLDER, MEASUREMENTS_FOLDER
 
 
 async def file_exists(path: str) -> bool:
@@ -26,7 +28,7 @@ async def file_exists(path: str) -> bool:
 
 
 async def create_folders() -> None:
-    folders_to_create = [IMAGES_FOLDER]
+    folders_to_create = [IMAGES_FOLDER, MEASUREMENTS_FOLDER]
     for folder in folders_to_create:
         full_path = os.path.join(DATA_FOLDER, folder)
         if not os.path.exists(full_path):
@@ -37,6 +39,12 @@ async def save_file(relative_path: str, contents: bytes) -> None:
     full_path = os.path.join(DATA_FOLDER, relative_path)
     async with aiof.open(full_path, mode='wb+') as f:
         await f.write(contents)
+
+
+async def get_json_from_file(relative_path: str) -> Dict:
+    full_path = os.path.join(DATA_FOLDER, relative_path)
+    async with aiof.open(full_path, mode='r') as fp:
+        return json.loads(await fp.read())
 
 
 async def get_file(filename: str) -> FileResponse:

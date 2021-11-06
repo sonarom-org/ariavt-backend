@@ -47,8 +47,24 @@ services = sqlalchemy.Table(
         "name", sqlalchemy.String, unique=True, nullable=False, index=True
     ),
     sqlalchemy.Column("url", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("result_type", sqlalchemy.String, nullable=False),
     sqlalchemy.Column("full_name", sqlalchemy.String),
     sqlalchemy.Column("description", sqlalchemy.String),
+)
+
+results = sqlalchemy.Table(
+    "results",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("relative_path", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column(
+        "image_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("images.id"),
+        nullable=False
+    ),
+    sqlalchemy.Column(
+        "service_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("services.id"),
+        nullable=False
+    ),
 )
 
 
