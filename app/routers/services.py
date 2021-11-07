@@ -28,9 +28,15 @@ async def add_service(
         url: str = Form(...),
         result_type: str = Form(...),
         full_name: str = Form(...),
-        description: str = Form(...),
+        description: Optional[str] = Form(""),
         current_user: User = Depends(get_current_active_user),
 ):
+    if result_type not in ['image', 'measurement']:
+        raise HTTPException(
+            status_code=422,
+            detail='Invalid result type'
+        )
+
     # Operation only available for admin users
     if current_user.role == ADMIN_ROLE:
         query = services.insert().values(
@@ -54,6 +60,7 @@ async def get_service(
         service_id: int,
         image_id: Optional[int] = None,
         force_analysis: Optional[bool] = False,
+        get_only_finished: Optional[bool] = False,
         current_user: User = Depends(get_current_active_user),
 ):
 
@@ -100,6 +107,11 @@ async def get_service(
                 else:
                     raise HTTPException(
                         status_code=403, detail='Unknown result type'
+                    )
+            else:
+                if get_only_finished:
+                    raise HTTPException(
+                        status_code=404, detail="Result not found"
                     )
 
         image = await get_image_bytes(image_id)
@@ -169,7 +181,7 @@ async def delete_service(
 
 
 @router.put("/{service_id}")
-async def add_service(
+async def update_service(
         service_id: int,
         name: Optional[str] = Form(None),
         url: Optional[str] = Form(None),
@@ -184,6 +196,11 @@ async def add_service(
     if url:
         values['url'] = url
     if result_type:
+        if result_type not in ['image', 'measurement']:
+            raise HTTPException(
+                status_code=422,
+                detail='Invalid result type'
+            )
         values['result_type'] = result_type
     if full_name:
         values['full_name'] = full_name

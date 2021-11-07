@@ -68,6 +68,6 @@ os.system(
 # Run docker compose
 os.system(
     'docker-compose -f backend.{}.yml up \
-    --build --force-recreate {}'
+    --build --force-recreate --remove-orphans {}'
     .format(mode, extra_args)
 )
