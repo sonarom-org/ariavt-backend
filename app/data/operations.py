@@ -65,6 +65,29 @@ async def remove_image(id_: int, relative_path: str, user: User) -> None:
         await database.execute(query)
 
 
+async def remove_result(
+        result_id: int, original_image_id: int, relative_path: str, user: User
+) -> None:
+    query = select(
+        [images.c.id, images.c.user_id]
+    ).where(images.c.id == original_image_id)
+    db_images = await database.fetch_one(query)
+    # If a record is found
+    if db_images is not None:
+        # Do not perform the deletion of an image if the user who
+        # intends to perform the deletion does not own the image
+        if db_images['user_id'] != user.id:
+            raise HTTPException(
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+                detail="Operation not allowed"
+            )
+        # Delete image file from file system
+        await delete_file(relative_path)
+        # Delete image record from images table
+        query = results.delete().where(results.columns.id == result_id)
+        await database.execute(query)
+
+
 async def _save_and_insert_result(
         filename: str,
         relative_path: Union[str, Path],

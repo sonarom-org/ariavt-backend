@@ -8,9 +8,9 @@ from fastapi import Depends
 from sqlalchemy.sql import select
 
 from app.data.models import Image, User
-from app.data.database import database, images
+from app.data.database import database, images, results
 from app.data.io_files import get_file, get_file_base64, get_file_bytes
-from app.data.operations import add_image, remove_image
+from app.data.operations import add_image, remove_image, remove_result
 from app.security.methods import get_current_active_user
 
 
@@ -107,12 +107,22 @@ async def delete_images(
         selection_hash: str,
         current_user: User = Depends(get_current_active_user)
 ):
+    # Remove results for the specified images
+    query = select([results], results.c.image_id.in_(selection[selection_hash]))
+    db_results = await database.fetch_all(query)
+    # Remove all selected images
+    for db_result in db_results:
+        await remove_result(
+            db_result['id'], db_result['image_id'], db_result['relative_path'],
+            current_user
+        )
+    # Remove images
     # Get DB records for given ids
     query = select([images], images.c.id.in_(selection[selection_hash]))
-    db_images = await database.fetch_all(query)
+    db_results = await database.fetch_all(query)
     # Remove all selected images
-    for db_image in db_images:
-        await remove_image(db_image['id'], db_image['relative_path'],
+    for db_result in db_results:
+        await remove_image(db_result['id'], db_result['relative_path'],
                            current_user)
     return {'removed': selection[selection_hash]}
 

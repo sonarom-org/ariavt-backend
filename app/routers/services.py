@@ -6,6 +6,7 @@ from fastapi import (
 )
 from pydantic.class_validators import Any
 from sqlalchemy.sql import select, and_
+import httpx
 from httpx import AsyncClient
 from starlette.responses import FileResponse
 
@@ -123,12 +124,18 @@ async def get_service(
             # headers = token_r.headers.copy()
             headers = {'accept': 'application/json'}
             # print('HEADERS', headers)
+            try:
             # Post data
-            response = await ac.post(
-                db_service['url'],
-                files=files,
-                headers=headers
-            )
+                response = await ac.post(
+                    db_service['url'],
+                    files=files,
+                    headers=headers
+                )
+            except httpx.ConnectError:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Service unavailable",
+                )
 
             if db_service['result_type'] == 'image':
                 img_bytes = response.content
