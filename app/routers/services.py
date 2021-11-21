@@ -78,6 +78,8 @@ async def get_service(
         # To perform the update, the image must be owned by the user
         query = select([images]).where(images.c.id == image_id)
         db_image = await database.fetch_one(query)
+        if not db_image:
+            raise HTTPException(status_code=404, detail="Image not found")
         if db_image['user_id'] != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

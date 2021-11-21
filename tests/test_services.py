@@ -6,7 +6,7 @@ from httpx import AsyncClient, Response
 from http import HTTPStatus as StC
 
 from tests.models_test import AccessToken, TokenResponse
-from tests.utils import upload_single_image
+from tests.utils import upload_single_image, delete_images
 
 
 @pytest.mark.asyncio
@@ -43,7 +43,6 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         data=service_1,
         headers=token_r.headers
     )
-
     assert response.status_code == StC.OK
     service_1_id = response.json()['id']
 
@@ -52,7 +51,6 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         data=service_2,
         headers=token_r.headers
     )
-
     print(response.json())
     assert response.status_code == StC.OK
     assert response.json()['id']
@@ -64,7 +62,6 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         "/services/{}".format(service_1_id),
         headers=token_r.headers
     )
-
     print(response.json())
     assert response.status_code == StC.OK
     # Check if all service fields are present and match
@@ -78,7 +75,6 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         "/services/{}".format(service_2_id),
         headers=token_r.headers
     )
-
     print(response.json())
     assert response.status_code == StC.OK
     # Check if all service fields are present and match
@@ -118,7 +114,6 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         "/services/{}".format(service_1_id),
         headers=token_r.headers
     )
-
     print(response.json())
     assert response.status_code == StC.OK
     assert response.json()['full_name'] == 'Service 1 Updated'
@@ -150,7 +145,6 @@ async def test_service_methods(client: AsyncClient, token_r: TokenResponse):
         "/services/{}".format(service_2_id),
         headers=token_r.headers
     )
-
     print(response.json())
     assert response.status_code == StC.OK
     assert response.json()['removed']
@@ -217,7 +211,6 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
         data=service_1,
         headers=token_r.headers
     )
-
     assert response.status_code == StC.OK
     service_id = response.json()['id']
 
@@ -226,7 +219,6 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
         params={'image_id': image_id},
         headers=token_r.headers,
     )
-
     assert response.status_code == StC.OK
     assert type(response.content) == bytes
     image_type = imghdr.what(None, response.content)
@@ -239,7 +231,6 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
         params={'image_id': image_id},
         headers=token_r.headers,
     )
-
     assert response.status_code == StC.OK
     assert type(response.content) == bytes
     image_type = imghdr.what(None, response.content)
@@ -259,7 +250,6 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
         data=service_1,
         headers=token_r.headers
     )
-
     assert response.status_code == StC.OK
     service_id = response.json()['id']
 
@@ -268,7 +258,6 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
         params={'image_id': image_id},
         headers=token_r.headers,
     )
-
     assert response.status_code == StC.OK
     assert response.json()['image'] == 'OK'
 
@@ -279,6 +268,18 @@ async def test_service_image(client: AsyncClient, token_r: TokenResponse):
         params={'image_id': image_id},
         headers=token_r.headers,
     )
-
     assert response.status_code == StC.OK
     assert response.json()['image'] == 'OK'
+
+    # Remove image previously uploaded
+    response = await delete_images(client, token_r, ids=[image_id])
+    assert response.status_code == StC.OK
+    assert 'removed' in response.json()
+
+    # Try to get result for the removed image
+    response = await client.get(
+        f"/services/{service_id}",
+        params={'image_id': image_id},
+        headers=token_r.headers,
+    )
+    assert response.status_code == StC.NOT_FOUND
