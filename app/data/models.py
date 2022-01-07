@@ -1,4 +1,6 @@
 from typing import Optional
+import datetime
+
 from pydantic import BaseModel
 
 
@@ -6,6 +8,8 @@ class ImageIn(BaseModel):
     text: Optional[str]
     relative_path: str
     title: Optional[str]
+    patient_nin: Optional[str]
+    date: Optional[datetime.date]
 
 
 class Image(ImageIn):

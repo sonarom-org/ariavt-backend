@@ -19,6 +19,7 @@ images = sqlalchemy.Table(
     sqlalchemy.Column("title", sqlalchemy.String),
     sqlalchemy.Column("text", sqlalchemy.String),
     sqlalchemy.Column("relative_path", sqlalchemy.String),
+    sqlalchemy.Column("date", sqlalchemy.String),
     sqlalchemy.Column(
         "user_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"),
         nullable=False

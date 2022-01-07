@@ -4,6 +4,7 @@ import os
 import imghdr
 from pathlib import Path
 from typing import Dict, Tuple, Union
+import datetime
 
 from fastapi import File, UploadFile, HTTPException, Form
 from sqlalchemy.sql import select
@@ -25,13 +26,7 @@ async def get_user(username: str) -> UserInDB:
     return user
 
 
-async def add_image(
-        file: UploadFile = File(...),
-        user: User = None,
-        title: str = '',
-        text: str = '',
-        patient_nin: str = None,
-):
+async def get_patient_id(patient_nin: str) -> int:
     patient_id = None
     if patient_nin is not None:
         query = select([patients.c.id]).where(patients.c.nin == patient_nin)
@@ -49,6 +44,18 @@ async def add_image(
                 status_code=422,
                 detail="Image could not be added"
             )
+    return patient_id
+
+
+async def add_image(
+        file: UploadFile = File(...),
+        user: User = None,
+        title: str = '',
+        text: str = '',
+        patient_nin: str = None,
+        image_date: datetime.date = None,
+):
+    patient_id = await get_patient_id(patient_nin)
 
     relative_path = os.path.join(IMAGES_FOLDER, file.filename)
     print('Writing file {} to disk...'.format(file.filename))
@@ -63,6 +70,7 @@ async def add_image(
         title=title,
         text=text,
         relative_path=relative_path,
+        date=image_date,
         user_id=user.id,
         patient_id=patient_id,
     )

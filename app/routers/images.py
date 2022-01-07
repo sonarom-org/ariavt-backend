@@ -1,5 +1,6 @@
 from typing import List, Optional
 import hashlib
+import datetime
 
 from fastapi import (
     APIRouter, File, UploadFile, HTTPException, Query, Form, status
@@ -10,7 +11,7 @@ from sqlalchemy.sql import select
 from app.data.models import Image, User
 from app.data.database import database, images, results
 from app.data.io_files import get_file, get_file_base64, get_file_bytes
-from app.data.operations import add_image, remove_image, remove_result
+from app.data.operations import add_image, get_patient_id, remove_image, remove_result
 from app.security.methods import get_current_active_user
 
 
@@ -79,9 +80,10 @@ async def upload_image(
         title: str = Form(...),
         text: str = Form(''),
         patient_nin: str = Form(None),
+        image_date: datetime.date = Form(None),
 ):
     last_record_id = await add_image(
-        file, current_user, title, text, patient_nin
+        file, current_user, title, text, patient_nin, image_date
     )
     return {"id": last_record_id}
 
@@ -135,6 +137,8 @@ async def update_image(
         image_id: int,
         text: Optional[str] = Form(None),
         title: Optional[str] = Form(None),
+        patient_nin: Optional[str] = Form(None),
+        image_date: Optional[datetime.date] = Form(None),
         current_user: User = Depends(get_current_active_user)
 ):
     # To perform the update, the image must be owned by the user
@@ -152,6 +156,12 @@ async def update_image(
         values['title'] = title
     if text:
         values['text'] = text
+    if patient_nin:
+        patient_id = await get_patient_id(patient_nin)
+        if patient_id:
+            values['patient_id'] = patient_id
+    if image_date:
+        values['date'] = image_date
 
     query = images.update().values(**values).where(images.c.id == image_id)
     # TODO: esto no devuelve nada con el update
