@@ -10,7 +10,7 @@ from sqlalchemy.sql import select
 
 from app.config import IMAGES_FOLDER, MEASUREMENTS_FOLDER
 from app.data.models import UserInDB, User
-from app.data.database import database, images, users, results
+from app.data.database import database, images, users, results, patients
 from app.data.io_files import save_file, delete_file
 
 
@@ -30,7 +30,26 @@ async def add_image(
         user: User = None,
         title: str = '',
         text: str = '',
+        patient_nin: str = None,
 ):
+    patient_id = None
+    if patient_nin is not None:
+        query = select([patients.c.id]).where(patients.c.nin == patient_nin)
+        db_patient = await database.fetch_one(query)
+        # If a record is not found, create it
+        if db_patient is None:
+            query = patients.insert().values(
+                nin=patient_nin,
+            )
+            patient_id = await database.execute(query)
+        else:
+            patient_id = db_patient['id']
+        if patient_id is None:
+            raise HTTPException(
+                status_code=422,
+                detail="Image could not be added"
+            )
+
     relative_path = os.path.join(IMAGES_FOLDER, file.filename)
     print('Writing file {} to disk...'.format(file.filename))
     contents = await file.read()
@@ -40,10 +59,13 @@ async def add_image(
         raise HTTPException(status_code=422,
                             detail="Uploaded file is not an image")
     await save_file(relative_path, contents)
-    query = images.insert().values(title=title,
-                                   text=text,
-                                   relative_path=relative_path,
-                                   user_id=user.id)
+    query = images.insert().values(
+        title=title,
+        text=text,
+        relative_path=relative_path,
+        user_id=user.id,
+        patient_id=patient_id,
+    )
     last_record_id = await database.execute(query)
     return last_record_id
 

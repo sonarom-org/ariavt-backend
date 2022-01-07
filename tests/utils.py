@@ -28,6 +28,7 @@ async def upload_single_image(
         data={
             "text": text,
             "title": title,
+            "patient_nin": "00000000A",
         },
         headers=token_r.headers
     )
