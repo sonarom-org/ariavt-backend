@@ -23,6 +23,9 @@ images = sqlalchemy.Table(
         "user_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"),
         nullable=False
     ),
+    sqlalchemy.Column(
+        "patient_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("patients.id")
+    ),
 )
 
 users = sqlalchemy.Table(
@@ -64,6 +67,15 @@ results = sqlalchemy.Table(
     sqlalchemy.Column(
         "service_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("services.id"),
         nullable=False
+    ),
+)
+
+patients = sqlalchemy.Table(
+    "patients",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, index=True),
+    sqlalchemy.Column(  # NIN: National Identification Number
+        "nin", sqlalchemy.String, index=True
     ),
 )
 
