@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: db.dockerfile
-    restart: always
+      # restart: always
     environment:
       - POSTGRES_DB=ariavt
       - POSTGRES_USER=postgres
