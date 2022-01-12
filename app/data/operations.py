@@ -70,7 +70,7 @@ async def add_image(
         title=title,
         text=text,
         relative_path=relative_path,
-        date=image_date,
+        date=str(image_date),
         user_id=user.id,
         patient_id=patient_id,
     )

@@ -4,7 +4,10 @@ import base64
 import imghdr
 import os
 import stat
+import tempfile
 
+from skimage import io
+from skimage.transform import resize
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 import aiofiles.os as aio_os
@@ -47,8 +50,27 @@ async def get_json_from_file(relative_path: str) -> Dict:
         return json.loads(await fp.read())
 
 
-async def get_file(filename: str) -> FileResponse:
+async def get_file(filename: str, downscale=True) -> FileResponse:
     path = os.path.join(DATA_FOLDER, filename)
+    if downscale:
+        img_bytes = await get_file_bytes(filename)
+        img_type = imghdr.what(None, img_bytes)
+
+        if img_type is not None:
+            with tempfile.NamedTemporaryFile(
+                mode='w+b', suffix=f'.{img_type}', delete=False
+            ) as F_OUT:
+                F_OUT.write(img_bytes)
+                image = io.imread(F_OUT)
+                resize_factor = None
+                height_ratio = image.shape[1] / image.shape[0]
+                if len(image.shape) == 3:
+                    resize_factor = (320, 320*height_ratio, image.shape[2])
+                else:
+                    resize_factor = (320, 320*height_ratio)
+                image_resized = resize(image, resize_factor, anti_aliasing=True)
+                io.imsave(F_OUT.name, image_resized)
+                return FileResponse(F_OUT.name, media_type=f'image/{img_type}')
     exists = await file_exists(path)
     if exists:
         return FileResponse(path)

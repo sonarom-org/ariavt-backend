@@ -9,7 +9,7 @@ from fastapi import Depends
 from sqlalchemy.sql import select
 
 from app.data.models import Image, User
-from app.data.database import database, images, results
+from app.data.database import database, images, results, patients
 from app.data.io_files import get_file, get_file_base64, get_file_bytes
 from app.data.operations import add_image, get_patient_id, remove_image, remove_result
 from app.security.methods import get_current_active_user
@@ -32,7 +32,20 @@ async def read_images(
         db_images = await database.fetch_all(query)
         if not db_images:
             raise HTTPException(status_code=404, detail="Item(s) not found")
-        return db_images
+        else:
+            result_images = []
+            for db_image in db_images:
+                result_image = dict(db_image)
+                del result_image['patient_id']
+                query = select([patients]).where(patients.c.id == db_image['patient_id'])
+                db_patient = await database.fetch_one(query)
+                if db_patient == None:
+                    result_image['patient_nin'] = ""
+                else:
+                    result_image['patient_nin'] = db_patient['nin']
+                print(result_image, flush=True)
+                result_images.append(result_image)
+            return result_images
     elif user_id is not None:
         query = select([images]).where(user_id == images.c.user_id)
         db_images = await database.fetch_all(query)
@@ -45,11 +58,14 @@ async def read_images(
 
 
 @router.get("/{id_}")
-async def get_image(id_: int):
+async def get_image(
+        id_: int,
+        downscale: Optional[bool] = True,
+):
     query = images.select().where(images.columns.id == id_)
     db_image = await database.fetch_one(query)
     if db_image is not None:
-        return await get_file(db_image['relative_path'])
+        return await get_file(db_image['relative_path'], downscale)
     else:
         raise HTTPException(status_code=404, detail="Item not found")
 
@@ -82,6 +98,8 @@ async def upload_image(
         patient_nin: str = Form(None),
         image_date: datetime.date = Form(None),
 ):
+    if image_date:
+        image_date = str(image_date)
     last_record_id = await add_image(
         file, current_user, title, text, patient_nin, image_date
     )
@@ -161,9 +179,8 @@ async def update_image(
         if patient_id:
             values['patient_id'] = patient_id
     if image_date:
-        values['date'] = image_date
+        values['date'] = str(image_date)
 
     query = images.update().values(**values).where(images.c.id == image_id)
-    # TODO: esto no devuelve nada con el update
-    last_record_id = await database.execute(query)
-    return {"id": last_record_id}
+    _ = await database.execute(query)
+    # return {"id": image_id}

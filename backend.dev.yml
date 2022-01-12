@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: db.dockerfile
-    restart: always
+    #restart: always
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - app-data:/mnt/app-data
